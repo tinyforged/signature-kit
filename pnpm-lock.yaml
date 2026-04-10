@@ -69,10 +69,11 @@ importers:
         version: 2.2.12(typescript@5.9.3)
 
   packages/core:
-    devDependencies:
+    dependencies:
       signature_pad:
-        specifier: ^5.1.0
+        specifier: ^4.0.0 || ^5.0.0
         version: 5.1.3
+    devDependencies:
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(@microsoft/api-extractor@7.58.2)(postcss@8.5.9)(typescript@5.9.3)
@@ -81,10 +82,14 @@ importers:
         version: 5.9.3
 
   packages/react:
-    devDependencies:
+    dependencies:
       '@tinyforged/signature-kit':
-        specifier: workspace:*
-        version: link:../core
+        specifier: ^0.1.0
+        version: 0.1.0(signature_pad@5.1.3)
+      signature_pad:
+        specifier: ^4.0.0 || ^5.0.0
+        version: 5.1.3
+    devDependencies:
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.14
@@ -97,9 +102,6 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.5(react@19.2.5)
-      signature_pad:
-        specifier: ^5.1.0
-        version: 5.1.3
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(@microsoft/api-extractor@7.58.2)(postcss@8.5.9)(typescript@5.9.3)
@@ -108,16 +110,17 @@ importers:
         version: 5.9.3
 
   packages/vue:
-    devDependencies:
+    dependencies:
       '@tinyforged/signature-kit':
-        specifier: workspace:*
-        version: link:../core
+        specifier: ^0.1.0
+        version: 0.1.0(signature_pad@5.1.3)
+      signature_pad:
+        specifier: ^4.0.0 || ^5.0.0
+        version: 5.1.3
+    devDependencies:
       '@vitejs/plugin-vue':
         specifier: ^5.2.0
         version: 5.2.4(vite@6.4.2)(vue@3.5.32(typescript@5.9.3))
-      signature_pad:
-        specifier: ^5.1.0
-        version: 5.1.3
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -739,6 +742,11 @@ packages:
 
   '@rushstack/ts-command-line@5.3.5':
     resolution: {integrity: sha512-ToJQu3+o6aEdDoApGrwb/RsbwDi/NSC7jIEaAezzWM470TRrsXfSHoYAm1eWkhh34xJ+kZxU1ZzKSHiOMlOFPA==}
+
+  '@tinyforged/signature-kit@0.1.0':
+    resolution: {integrity: sha512-7Bar3jQbuCtzXs8FCPrMC1vd+qsp+qkxM/g2wwoKu9rzR54FOuepcCbTgckj3myOnllN1WBMhuBIq4pIhpDm+g==}
+    peerDependencies:
+      signature_pad: ^4.0.0 || ^5.0.0
 
   '@types/argparse@1.0.38':
     resolution: {integrity: sha512-ebDJ9b0e702Yr7pWgB0jzm+CX4Srzz8RcXtLJDJB+BSccqMa36uyH/zUsSYao5+BD1ytv3k3rPYCq4mAE1hsXA==}
@@ -1843,6 +1851,10 @@ snapshots:
       string-argv: 0.3.2
     transitivePeerDependencies:
       - '@types/node'
+
+  '@tinyforged/signature-kit@0.1.0(signature_pad@5.1.3)':
+    dependencies:
+      signature_pad: 5.1.3
 
   '@types/argparse@1.0.38': {}
 
