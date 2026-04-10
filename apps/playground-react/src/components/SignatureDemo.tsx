@@ -89,6 +89,13 @@ export default function SignatureDemo() {
     updateCanStates()
   }
 
+  function handleTrim() {
+    const result = sigRef.current?.trim({ padding: 10 })
+    if (result) {
+      setPreviewUrl(result.dataUrl)
+    }
+  }
+
   function handleWatermark() {
     const opts: WatermarkOptions = {
       text: wm.text,
@@ -166,6 +173,7 @@ export default function SignatureDemo() {
           <button onClick={handleClear}>Clear</button>
           <button onClick={handleUndo} disabled={!canUndoState} style={btnStyle(!canUndoState)}>Undo</button>
           <button onClick={handleRedo} disabled={!canRedoState} style={btnStyle(!canRedoState)}>Redo</button>
+          <button onClick={handleTrim}>Trim</button>
           <button onClick={() => setIsDisabled(!isDisabled)}>
             {isDisabled ? 'Enable' : 'Disable'}
           </button>

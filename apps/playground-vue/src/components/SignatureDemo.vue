@@ -29,6 +29,7 @@
         <button @click="handleClear">Clear</button>
         <button @click="handleUndo" :disabled="!canUndo">Undo</button>
         <button @click="handleRedo" :disabled="!canRedo">Redo</button>
+        <button @click="handleTrim">Trim</button>
         <button @click="isDisabled = !isDisabled">
           {{ isDisabled ? 'Enable' : 'Disable' }}
         </button>
@@ -267,6 +268,13 @@ function handleWatermark() {
     align: wm.align,
     baseline: wm.baseline,
   })
+}
+
+function handleTrim() {
+  const result = sigRef.value?.trim({ padding: 10 })
+  if (result) {
+    previewUrl.value = result.dataUrl
+  }
 }
 
 function onBegin() { updateCanStates() }
