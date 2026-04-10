@@ -19,6 +19,7 @@ jobs:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
+          token: ${{ secrets.GH_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
@@ -46,3 +47,4 @@ jobs:
         run: pnpm --filter @tinyforged/signature-kit --filter @tinyforged/signature-kit-vue --filter @tinyforged/signature-kit-react publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
