@@ -36,6 +36,7 @@ export class SignatureKit {
     new Map()
   private _resizeObserver: ResizeObserver | null = null
   private _lastSize = { width: 0, height: 0 }
+  private _colorCache = new Map<string, [number, number, number, number] | null>()
 
   constructor(canvas: HTMLCanvasElement, options: SignatureKitOptions = {}) {
     this._canvas = canvas
@@ -260,8 +261,9 @@ export class SignatureKit {
     }
   }
 
-  /** Parse a CSS color string to [r, g, b, a] or null */
+  /** Parse a CSS color string to [r, g, b, a] or null (cached) */
   private _parseColor(color: string): [number, number, number, number] | null {
+    if (this._colorCache.has(color)) return this._colorCache.get(color)!
     try {
       const canvas = document.createElement('canvas')
       canvas.width = 1
@@ -271,8 +273,11 @@ export class SignatureKit {
       ctx.fillStyle = color
       ctx.fillRect(0, 0, 1, 1)
       const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
-      return [r, g, b, a]
+      const result: [number, number, number, number] = [r, g, b, a]
+      this._colorCache.set(color, result)
+      return result
     } catch {
+      this._colorCache.set(color, null)
       return null
     }
   }
@@ -402,6 +407,10 @@ export class SignatureKit {
     }
 
     this._lastSize = { width: newWidth, height: newHeight }
+
+    // Emit resize event and callback
+    this._emit('resize', { type: 'resize' })
+    this._options.onResize?.({ width: newWidth, height: newHeight })
   }
 
   private _saveUndoState(): void {

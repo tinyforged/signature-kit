@@ -136,7 +136,7 @@ function canRedo(): boolean {
   return kit!.canRedo
 }
 
-function addWaterMark(options: WatermarkOptions): void {
+function addWatermark(options: WatermarkOptions): void {
   kit!.addWatermark(options)
 }
 
@@ -180,7 +180,7 @@ defineExpose({
   redo,
   canUndo,
   canRedo,
-  addWaterMark,
+  addWatermark,
   clearWatermark,
   fromDataURL,
   fromFile,
@@ -190,5 +190,6 @@ defineExpose({
   toSVG,
   trim,
   getKit: () => kit,
+  getCanvas: () => canvasRef.value,
 })
 </script>

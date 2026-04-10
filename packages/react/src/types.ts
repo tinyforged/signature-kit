@@ -39,6 +39,8 @@ export interface SignatureCanvasProps {
   onUndo?: () => void
   /** Callback when redo is performed */
   onRedo?: () => void
+  /** Callback when save() is called */
+  onSave?: (dataUrl: string) => void
 
   /** Watermark options */
   watermark?: WatermarkOptions

@@ -79,6 +79,11 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
     useImperativeHandle(ref, () => ({
       isEmpty: () => kitRef.current?.isEmpty() ?? true,
       clear: () => kitRef.current?.clear(),
+      save: (type?: string) => {
+        const url = kitRef.current?.toDataURL(type) ?? ''
+        props.onSave?.(url)
+        return url
+      },
       undo: () => kitRef.current?.undo(),
       redo: () => kitRef.current?.redo(),
       canUndo: () => kitRef.current?.canUndo ?? false,

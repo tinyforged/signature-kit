@@ -309,7 +309,7 @@ function handleTrim() {
 }
 
 function handleWatermark() {
-  sigRef.value?.addWaterMark({
+  sigRef.value?.addWatermark({
     text: wm.text,
     fontSize: wm.fontSize,
     fontFamily: wm.fontFamily,

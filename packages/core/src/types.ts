@@ -8,6 +8,8 @@ export interface SignatureKitOptions extends SignaturePadOptions {
   scaleOnResize?: boolean
   /** Whether the signature pad is disabled/read-only. Default: false */
   disabled?: boolean
+  /** Callback when the canvas resizes */
+  onResize?: (size: { width: number; height: number }) => void
 }
 
 /** Watermark configuration */
@@ -63,6 +65,7 @@ export type SignatureKitEventType =
   | 'clear'
   | 'undo'
   | 'redo'
+  | 'resize'
 
 /** Event detail payload */
 export interface SignatureKitEventDetail {
