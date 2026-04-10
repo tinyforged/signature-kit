@@ -140,6 +140,10 @@ function addWaterMark(options: WatermarkOptions): void {
   kit!.addWatermark(options)
 }
 
+function clearWatermark(): void {
+  kit!.clearWatermark()
+}
+
 function fromDataURL(url: string): Promise<void> {
   return kit!.fromDataURL(url)
 }
@@ -177,6 +181,7 @@ defineExpose({
   canUndo,
   canRedo,
   addWaterMark,
+  clearWatermark,
   fromDataURL,
   fromFile,
   toDataURL,

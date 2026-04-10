@@ -63,6 +63,7 @@ export interface SignatureCanvasRef {
   toData: () => import('@tinyforged/signature-kit').PointGroup[]
   fromData: (data: import('@tinyforged/signature-kit').PointGroup[]) => void
   addWatermark: (options: WatermarkOptions) => void
+  clearWatermark: () => void
   trim: (options?: import('@tinyforged/signature-kit').TrimOptions) => import('@tinyforged/signature-kit').TrimResult | null
   getKit: () => import('@tinyforged/signature-kit').SignatureKit | null
   getCanvas: () => HTMLCanvasElement | null

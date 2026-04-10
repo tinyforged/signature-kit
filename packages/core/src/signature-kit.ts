@@ -31,6 +31,7 @@ export class SignatureKit {
   private _options: SignatureKitOptions
   private _undoStack: PointGroup[][] = []
   private _redoStack: PointGroup[][] = []
+  private _watermarkOptions: WatermarkOptions | null = null
   private _listeners: Map<SignatureKitEventType, Set<SignatureKitEventHandler>> =
     new Map()
   private _resizeObserver: ResizeObserver | null = null
@@ -329,9 +330,30 @@ export class SignatureKit {
   }
 
   addWatermark(options: WatermarkOptions): void {
+    this._watermarkOptions = options
+    this._applyWatermark()
+  }
+
+  clearWatermark(): void {
+    this._watermarkOptions = null
+    // Redraw canvas from stroke data to remove watermark
+    const data = this._sigPad.toData()
+    this._sigPad.clear()
+    if (data.length > 0) {
+      this._sigPad.fromData(data, { clear: false })
+    }
+  }
+
+  get watermark(): WatermarkOptions | null {
+    return this._watermarkOptions
+  }
+
+  /** Draw the stored watermark onto the canvas (if any) */
+  private _applyWatermark(): void {
+    if (!this._watermarkOptions) return
     const ctx = this._canvas.getContext('2d')
     if (ctx) {
-      drawWatermark(ctx, options)
+      drawWatermark(ctx, this._watermarkOptions)
     }
   }
 
@@ -396,6 +418,7 @@ export class SignatureKit {
     this._sigPad.off()
     this._undoStack.length = 0
     this._redoStack.length = 0
+    this._watermarkOptions = null
     this._listeners.clear()
   }
 

@@ -116,6 +116,10 @@ export default function SignatureDemo() {
     updateCanStates()
   }
 
+  function handleClearWatermark() {
+    sigRef.current?.clearWatermark()
+  }
+
   function handleUndo() {
     sigRef.current?.undo()
     updateCanStates()
@@ -354,6 +358,7 @@ export default function SignatureDemo() {
               </div>
             </div>
             <button style={{ ...css.btnPrimary, ...css.btnBlock }} onClick={handleWatermark}>Apply Watermark</button>
+            <button style={{ ...css.btn, ...css.btnBlock }} onClick={handleClearWatermark}>Clear Watermark</button>
           </div>
         </details>
       </aside>

@@ -98,6 +98,7 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
       fromData: (data: PointGroup[]) => kitRef.current?.fromData(data),
       addWatermark: (options: WatermarkOptions) =>
         kitRef.current?.addWatermark(options),
+      clearWatermark: () => kitRef.current?.clearWatermark(),
       trim: (options?: TrimOptions) =>
         kitRef.current?.trim(options) ?? null,
       getKit: () => kitRef.current,

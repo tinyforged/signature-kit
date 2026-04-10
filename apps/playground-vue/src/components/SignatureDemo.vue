@@ -214,6 +214,7 @@
             </div>
           </div>
           <button class="btn btn-primary btn-block" @click="handleWatermark">Apply Watermark</button>
+          <button class="btn btn-block" @click="handleClearWatermark">Clear Watermark</button>
         </div>
       </details>
     </aside>
@@ -326,6 +327,10 @@ function handleWatermark() {
     align: wm.align,
     baseline: wm.baseline,
   })
+}
+
+function handleClearWatermark() {
+  sigRef.value?.clearWatermark()
 }
 
 function onBegin() { updateCanStates() }
