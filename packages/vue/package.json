@@ -28,10 +28,12 @@
     "typecheck": "vue-tsc --noEmit",
     "clean": "rm -rf dist"
   },
-  "peerDependencies": {
-    "vue": "^3.3.0",
-    "@tinyforged/signature-kit": "^0.0.1",
+  "dependencies": {
+    "@tinyforged/signature-kit": "^0.1.0",
     "signature_pad": "^4.0.0 || ^5.0.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0"
   },
   "devDependencies": {
     "@tinyforged/signature-kit": "workspace:*",
