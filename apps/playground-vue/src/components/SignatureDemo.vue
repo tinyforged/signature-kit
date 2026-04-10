@@ -1,5 +1,6 @@
 <template>
   <div class="demo">
+    <!-- Signature controls -->
     <div class="controls">
       <div class="control-row">
         <label>
@@ -26,13 +27,120 @@
         <button @click="handleSave('image/jpeg')">Save JPEG</button>
         <button @click="handleSaveSVG">Save SVG</button>
         <button @click="handleClear">Clear</button>
-        <button @click="handleUndo">Undo</button>
-        <button @click="handleWatermark">Add Watermark</button>
+        <button @click="handleUndo" :disabled="!canUndo">Undo</button>
+        <button @click="handleRedo" :disabled="!canRedo">Redo</button>
         <button @click="isDisabled = !isDisabled">
           {{ isDisabled ? 'Enable' : 'Disable' }}
         </button>
       </div>
     </div>
+
+    <!-- Watermark controls -->
+    <details class="watermark-section">
+      <summary>Watermark Settings</summary>
+      <div class="watermark-controls">
+        <div class="control-row">
+          <label>
+            Text:
+            <textarea v-model="wm.text" rows="2" placeholder="Signature Kit&#10;TinyForged"></textarea>
+          </label>
+        </div>
+        <div class="control-row">
+          <label>
+            Font Size: {{ wm.fontSize }}
+            <input type="range" min="10" max="60" step="1" v-model.number="wm.fontSize" />
+          </label>
+          <label>
+            Line Height: {{ wm.lineHeight }}
+            <input type="range" min="1" max="3" step="0.1" v-model.number="wm.lineHeight" />
+          </label>
+          <label>
+            Rotation: {{ wm.rotation }}°
+            <input type="range" min="-180" max="180" step="1" v-model.number="wm.rotation" />
+          </label>
+        </div>
+        <div class="control-row">
+          <label>
+            Font:
+            <select v-model="wm.fontFamily">
+              <option value="sans-serif">Sans-serif</option>
+              <option value="serif">Serif</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Courier New', monospace">Courier New</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="cursive">Cursive</option>
+            </select>
+          </label>
+          <label>
+            Style:
+            <select v-model="wm.fontStyle">
+              <option value="normal">Normal</option>
+              <option value="italic">Italic</option>
+              <option value="oblique">Oblique</option>
+            </select>
+          </label>
+          <label>
+            Weight:
+            <select v-model="wm.fontWeight">
+              <option value="normal">Normal</option>
+              <option value="bold">Bold</option>
+              <option value="lighter">Lighter</option>
+              <option value="100">100</option>
+              <option value="300">300</option>
+              <option value="900">900</option>
+            </select>
+          </label>
+        </div>
+        <div class="control-row">
+          <label>
+            Render:
+            <select v-model="wm.style">
+              <option value="fill">Fill</option>
+              <option value="stroke">Stroke</option>
+              <option value="all">Fill + Stroke</option>
+            </select>
+          </label>
+          <label>
+            Fill Color:
+            <input type="color" v-model="wm.fillStyleHex" />
+          </label>
+          <label>
+            Opacity: {{ wm.opacity }}
+            <input type="range" min="0.05" max="1" step="0.05" v-model.number="wm.opacity" />
+          </label>
+        </div>
+        <div class="control-row">
+          <label>
+            Align:
+            <select v-model="wm.align">
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </label>
+          <label>
+            Baseline:
+            <select v-model="wm.baseline">
+              <option value="top">Top</option>
+              <option value="middle">Middle</option>
+              <option value="bottom">Bottom</option>
+              <option value="alphabetic">Alphabetic</option>
+            </select>
+          </label>
+          <label>
+            X: {{ wm.x }}
+            <input type="range" min="0" max="400" step="5" v-model.number="wm.x" />
+          </label>
+          <label>
+            Y: {{ wm.y }}
+            <input type="range" min="0" max="300" step="5" v-model.number="wm.y" />
+          </label>
+        </div>
+        <div class="button-row">
+          <button @click="handleWatermark">Apply Watermark</button>
+        </div>
+      </div>
+    </details>
 
     <div class="canvas-wrapper">
       <SignatureCanvas
@@ -48,6 +156,8 @@
         @begin-stroke="onBegin"
         @end-stroke="onEnd"
         @save="onSave"
+        @undo="onUndo"
+        @redo="onRedo"
       />
     </div>
 
@@ -59,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { SignatureCanvas } from '@tinyforged/signature-kit-vue'
 
 const sigRef = ref<InstanceType<typeof SignatureCanvas> | null>(null)
@@ -70,6 +180,33 @@ const minWidth = ref(0.5)
 const maxWidth = ref(2.5)
 const isDisabled = ref(false)
 const previewUrl = ref('')
+const canUndo = ref(false)
+const canRedo = ref(false)
+
+const wm = reactive({
+  text: 'Signature Kit\nTinyForged',
+  fontSize: 24,
+  fontFamily: 'Georgia, serif',
+  fontStyle: 'italic' as const,
+  fontWeight: 'bold' as string | number,
+  style: 'fill' as const,
+  fillStyleHex: '#000000',
+  opacity: 0.15,
+  lineWidth: 1,
+  x: 20,
+  y: 20,
+  rotation: -25,
+  lineHeight: 1.6,
+  align: 'left' as const,
+  baseline: 'top' as const,
+})
+
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
 
 function handleSave(type: string) {
   const url = sigRef.value?.save(type)
@@ -98,26 +235,49 @@ function handleSaveSVG() {
 function handleClear() {
   sigRef.value?.clear()
   previewUrl.value = ''
+  updateCanStates()
 }
 
 function handleUndo() {
   sigRef.value?.undo()
+  updateCanStates()
+}
+
+function handleRedo() {
+  sigRef.value?.redo()
+  updateCanStates()
 }
 
 function handleWatermark() {
-  sigRef.value?.addWaterMark({ text: 'Signature Kit', style: 'all' })
+  sigRef.value?.addWaterMark({
+    text: wm.text,
+    fontSize: wm.fontSize,
+    fontFamily: wm.fontFamily,
+    fontStyle: wm.fontStyle,
+    fontWeight: wm.fontWeight,
+    style: wm.style,
+    fillStyle: hexToRgba(wm.fillStyleHex, 1),
+    strokeStyle: hexToRgba(wm.fillStyleHex, 1),
+    opacity: wm.opacity,
+    lineWidth: wm.lineWidth,
+    x: wm.x,
+    y: wm.y,
+    rotation: wm.rotation,
+    lineHeight: wm.lineHeight,
+    align: wm.align,
+    baseline: wm.baseline,
+  })
 }
 
-function onBegin(_event: MouseEvent | TouchEvent | PointerEvent) {
-  console.log('Stroke began')
-}
+function onBegin() { updateCanStates() }
+function onEnd() { updateCanStates() }
+function onUndo() { updateCanStates() }
+function onRedo() { updateCanStates() }
+function onSave(_dataUrl: string) {}
 
-function onEnd(_event: MouseEvent | TouchEvent | PointerEvent) {
-  console.log('Stroke ended')
-}
-
-function onSave(dataUrl: string) {
-  console.log('Saved:', dataUrl.substring(0, 50) + '...')
+function updateCanStates() {
+  canUndo.value = sigRef.value?.canUndo() ?? false
+  canRedo.value = sigRef.value?.canRedo() ?? false
 }
 </script>
 
@@ -137,6 +297,7 @@ function onSave(dataUrl: string) {
   display: flex;
   gap: 1.5rem;
   margin-bottom: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .control-row label {
@@ -161,8 +322,47 @@ button {
   font-size: 0.85rem;
 }
 
-button:hover {
+button:hover:not(:disabled) {
   background: #f0f0f0;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.watermark-section {
+  margin-bottom: 1rem;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.watermark-section summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.watermark-controls {
+  padding-top: 0.5rem;
+}
+
+textarea {
+  width: 200px;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+select {
+  font-size: 0.85rem;
+  padding: 0.2rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 .canvas-wrapper {

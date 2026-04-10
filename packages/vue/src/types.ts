@@ -46,5 +46,6 @@ export interface SignatureCanvasEmits {
   (e: 'endStroke', event: MouseEvent | TouchEvent | PointerEvent): void
   (e: 'clear'): void
   (e: 'undo'): void
+  (e: 'redo'): void
   (e: 'save', dataUrl: string): void
 }

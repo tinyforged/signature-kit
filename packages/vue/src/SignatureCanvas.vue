@@ -14,6 +14,8 @@ import { SignatureKit } from '@tinyforged/signature-kit'
 import type {
   SignatureKitOptions,
   WatermarkOptions,
+  TrimOptions,
+  TrimResult,
 } from '@tinyforged/signature-kit'
 import type { SignatureCanvasProps, SignatureCanvasEmits } from './types'
 
@@ -63,6 +65,7 @@ onMounted(() => {
   kit.on('endStroke', (detail) => emit('endStroke', detail.originalEvent!))
   kit.on('clear', () => emit('clear'))
   kit.on('undo', () => emit('undo'))
+  kit.on('redo', () => emit('redo'))
 
   if (props.defaultUrl) {
     kit.fromDataURL(props.defaultUrl)
@@ -121,6 +124,18 @@ function undo(): void {
   kit!.undo()
 }
 
+function redo(): void {
+  kit!.redo()
+}
+
+function canUndo(): boolean {
+  return kit!.canUndo
+}
+
+function canRedo(): boolean {
+  return kit!.canRedo
+}
+
 function addWaterMark(options: WatermarkOptions): void {
   kit!.addWatermark(options)
 }
@@ -133,8 +148,20 @@ function toDataURL(type?: string, encoderOptions?: number): string {
   return kit!.toDataURL(type, encoderOptions)
 }
 
+function toBlob(type?: string, quality?: number): Promise<Blob> {
+  return kit!.toBlob(type, quality)
+}
+
+function toFile(filename?: string, type?: string, quality?: number): Promise<File> {
+  return kit!.toFile(filename, type, quality)
+}
+
 function toSVG(): string {
   return kit!.toSVG()
+}
+
+function trim(options?: TrimOptions): TrimResult | null {
+  return kit!.trim(options)
 }
 
 defineExpose({
@@ -142,10 +169,16 @@ defineExpose({
   clear,
   isEmpty,
   undo,
+  redo,
+  canUndo,
+  canRedo,
   addWaterMark,
   fromDataURL,
   toDataURL,
+  toBlob,
+  toFile,
   toSVG,
+  trim,
   getKit: () => kit,
 })
 </script>

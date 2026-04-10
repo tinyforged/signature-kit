@@ -9,6 +9,7 @@ import { SignatureKit } from '@tinyforged/signature-kit'
 import type {
   SignatureKitOptions,
   WatermarkOptions,
+  TrimOptions,
   PointGroup,
 } from '@tinyforged/signature-kit'
 import type { SignatureCanvasProps, SignatureCanvasRef } from './types'
@@ -55,6 +56,7 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
       kit.on('endStroke', (detail) => props.onEnd?.(detail.originalEvent!))
       kit.on('clear', () => props.onClear?.())
       kit.on('undo', () => props.onUndo?.())
+      kit.on('redo', () => props.onRedo?.())
 
       if (props.defaultUrl) {
         kit.fromDataURL(props.defaultUrl)
@@ -78,8 +80,15 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
       isEmpty: () => kitRef.current?.isEmpty() ?? true,
       clear: () => kitRef.current?.clear(),
       undo: () => kitRef.current?.undo(),
+      redo: () => kitRef.current?.redo(),
+      canUndo: () => kitRef.current?.canUndo ?? false,
+      canRedo: () => kitRef.current?.canRedo ?? false,
       toDataURL: (type?: string, encoderOptions?: number) =>
         kitRef.current?.toDataURL(type, encoderOptions) ?? '',
+      toBlob: (type?: string, quality?: number) =>
+        kitRef.current?.toBlob(type, quality) ?? Promise.reject(new Error('No kit')),
+      toFile: (filename?: string, type?: string, quality?: number) =>
+        kitRef.current?.toFile(filename, type, quality) ?? Promise.reject(new Error('No kit')),
       toSVG: () => kitRef.current?.toSVG() ?? '',
       fromDataURL: (url: string) =>
         kitRef.current?.fromDataURL(url) ?? Promise.resolve(),
@@ -87,6 +96,8 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
       fromData: (data: PointGroup[]) => kitRef.current?.fromData(data),
       addWatermark: (options: WatermarkOptions) =>
         kitRef.current?.addWatermark(options),
+      trim: (options?: TrimOptions) =>
+        kitRef.current?.trim(options) ?? null,
       getKit: () => kitRef.current,
       getCanvas: () => canvasRef.current,
     }))

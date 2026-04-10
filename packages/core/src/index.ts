@@ -6,6 +6,8 @@ export type {
   SignatureKitEventDetail,
   SignatureKitEventHandler,
   WatermarkOptions,
+  TrimOptions,
+  TrimResult,
 } from './types'
 
 // Re-export useful types from signature_pad for convenience
