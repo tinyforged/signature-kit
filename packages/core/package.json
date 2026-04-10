@@ -1,6 +1,6 @@
 {
   "name": "@tinyforged/signature-kit",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Framework-agnostic electronic signature core with undo, watermark, and resize support",
   "license": "MIT",
   "author": "TinyForged",
