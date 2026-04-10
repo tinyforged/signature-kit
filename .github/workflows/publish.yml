@@ -23,22 +23,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
-      - name: Determine package filter
-        id: pkg
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          if [[ "$TAG" == *"signature-kit-react"* ]]; then
-            echo "filter=@tinyforged/signature-kit-react" >> "$GITHUB_OUTPUT"
-          elif [[ "$TAG" == *"signature-kit-vue"* ]]; then
-            echo "filter=@tinyforged/signature-kit-vue" >> "$GITHUB_OUTPUT"
-          elif [[ "$TAG" == *"signature-kit-v0"* ]]; then
-            echo "filter=@tinyforged/signature-kit" >> "$GITHUB_OUTPUT"
-          else
-            echo "filter=" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Publish
-        if: steps.pkg.outputs.filter != ''
-        run: pnpm --filter ${{ steps.pkg.outputs.filter }} publish --access public --no-git-checks
+        run: pnpm --filter @tinyforged/signature-kit --filter @tinyforged/signature-kit-vue --filter @tinyforged/signature-kit-react publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
