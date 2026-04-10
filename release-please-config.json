@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "changelog-path": "CHANGELOG.md",
+      "include-v-in-tag": false
+    },
+    "packages/core": {
+      "release-type": "node",
+      "changelog-path": "packages/core/CHANGELOG.md",
+      "include-v-in-tag": true
+    },
+    "packages/vue": {
+      "release-type": "node",
+      "changelog-path": "packages/vue/CHANGELOG.md",
+      "include-v-in-tag": true
+    },
+    "packages/react": {
+      "release-type": "node",
+      "changelog-path": "packages/react/CHANGELOG.md",
+      "include-v-in-tag": true
+    }
+  }
+}
