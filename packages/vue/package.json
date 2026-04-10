@@ -1,0 +1,58 @@
+{
+  "name": "@tinyforged/signature-kit-vue",
+  "version": "0.0.1",
+  "description": "Vue 3 electronic signature component",
+  "license": "MIT",
+  "author": "TinyForged",
+  "type": "module",
+  "main": "./dist/signature-kit-vue.umd.cjs",
+  "module": "./dist/signature-kit-vue.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/signature-kit-vue.js",
+      "require": "./dist/signature-kit-vue.umd.cjs"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "vue-tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0",
+    "@tinyforged/signature-kit": "^0.0.1",
+    "signature_pad": "^4.0.0 || ^5.0.0"
+  },
+  "devDependencies": {
+    "@tinyforged/signature-kit": "workspace:*",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "signature_pad": "^5.1.0",
+    "vite": "^6.0.0",
+    "vite-plugin-dts": "^4.3.0",
+    "vue": "^3.5.0",
+    "vue-tsc": "^2.2.0",
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "signature",
+    "canvas",
+    "component"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TinyForged/signature-kit",
+    "directory": "packages/vue"
+  }
+}

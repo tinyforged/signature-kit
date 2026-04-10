@@ -1,0 +1,151 @@
+<template>
+  <div
+    ref="containerRef"
+    :class="['signature-canvas-container', props.customClass]"
+    :style="containerStyle"
+  >
+    <canvas ref="canvasRef" :style="{ width: '100%', height: '100%' }"></canvas>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { SignatureKit } from '@tinyforged/signature-kit'
+import type {
+  SignatureKitOptions,
+  WatermarkOptions,
+} from '@tinyforged/signature-kit'
+import type { SignatureCanvasProps, SignatureCanvasEmits } from './types'
+
+const props = withDefaults(defineProps<SignatureCanvasProps>(), {
+  width: '100%',
+  height: '100%',
+  clearOnResize: false,
+  scaleOnResize: true,
+  disabled: false,
+  penColor: 'rgb(0, 0, 0)',
+  backgroundColor: 'rgb(255, 255, 255)',
+})
+
+const emit = defineEmits<SignatureCanvasEmits>()
+
+const canvasRef = ref<HTMLCanvasElement | null>(null)
+const containerRef = ref<HTMLDivElement | null>(null)
+let kit: SignatureKit | null = null
+
+const containerStyle = computed(() => ({
+  width: props.width,
+  height: props.height,
+  position: 'relative' as const,
+}))
+
+function buildOptions(): SignatureKitOptions {
+  return {
+    penColor: props.penColor,
+    backgroundColor: props.backgroundColor,
+    minWidth: props.minWidth,
+    maxWidth: props.maxWidth,
+    minDistance: props.minDistance,
+    dotSize: props.dotSize,
+    velocityFilterWeight: props.velocityFilterWeight,
+    throttle: props.throttle,
+    clearOnResize: props.clearOnResize,
+    scaleOnResize: props.scaleOnResize,
+    disabled: props.disabled,
+  }
+}
+
+onMounted(() => {
+  if (!canvasRef.value) return
+  kit = new SignatureKit(canvasRef.value, buildOptions())
+
+  kit.on('beginStroke', (detail) => emit('beginStroke', detail.originalEvent!))
+  kit.on('endStroke', (detail) => emit('endStroke', detail.originalEvent!))
+  kit.on('clear', () => emit('clear'))
+  kit.on('undo', () => emit('undo'))
+
+  if (props.defaultUrl) {
+    kit.fromDataURL(props.defaultUrl)
+  }
+  if (props.watermark) {
+    kit.addWatermark(props.watermark)
+  }
+})
+
+onBeforeUnmount(() => {
+  kit?.destroy()
+  kit = null
+})
+
+// React to option changes
+watch(
+  () => [
+    props.penColor,
+    props.backgroundColor,
+    props.minWidth,
+    props.maxWidth,
+    props.minDistance,
+    props.dotSize,
+    props.velocityFilterWeight,
+    props.throttle,
+  ],
+  () => {
+    if (kit) kit.updateOptions(buildOptions())
+  },
+)
+
+watch(
+  () => props.disabled,
+  (val) => {
+    if (kit) kit.disabled = val
+  },
+)
+
+// --- Exposed methods ---
+
+function save(type: string = 'image/png'): string {
+  const dataUrl = kit!.toDataURL(type)
+  emit('save', dataUrl)
+  return dataUrl
+}
+
+function clear(): void {
+  kit!.clear()
+}
+
+function isEmpty(): boolean {
+  return kit!.isEmpty()
+}
+
+function undo(): void {
+  kit!.undo()
+}
+
+function addWaterMark(options: WatermarkOptions): void {
+  kit!.addWatermark(options)
+}
+
+function fromDataURL(url: string): Promise<void> {
+  return kit!.fromDataURL(url)
+}
+
+function toDataURL(type?: string, encoderOptions?: number): string {
+  return kit!.toDataURL(type, encoderOptions)
+}
+
+function toSVG(): string {
+  return kit!.toSVG()
+}
+
+defineExpose({
+  save,
+  clear,
+  isEmpty,
+  undo,
+  addWaterMark,
+  fromDataURL,
+  toDataURL,
+  toSVG,
+  getKit: () => kit,
+})
+</script>

@@ -1,0 +1,26 @@
+{
+  "name": "signature-kit-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Electronic signature plugin for Vue 3 and React",
+  "license": "MIT",
+  "author": "TinyForged",
+  "scripts": {
+    "build": "pnpm --filter @tinyforged/signature-kit --filter @tinyforged/signature-kit-vue --filter @tinyforged/signature-kit-react run build",
+    "build:core": "pnpm --filter @tinyforged/signature-kit build",
+    "build:vue": "pnpm --filter @tinyforged/signature-kit-vue build",
+    "build:react": "pnpm --filter @tinyforged/signature-kit-react build",
+    "dev:vue": "pnpm --filter playground-vue dev",
+    "dev:react": "pnpm --filter playground-react dev",
+    "clean": "pnpm -r exec rm -rf dist node_modules .tsbuildinfo",
+    "typecheck": "pnpm -r --parallel run typecheck"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
