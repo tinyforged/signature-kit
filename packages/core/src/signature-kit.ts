@@ -164,6 +164,27 @@ export class SignatureKit {
     return this._sigPad.fromDataURL(url, options)
   }
 
+  fromFile(
+    file: File | Blob,
+    options?: { ratio?: number; width?: number; height?: number },
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          this._sigPad
+            .fromDataURL(reader.result, options)
+            .then(resolve)
+            .catch(reject)
+        } else {
+          reject(new Error('Failed to read file'))
+        }
+      }
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(file)
+    })
+  }
+
   fromData(data: PointGroup[]): void {
     this._sigPad.fromData(data)
   }

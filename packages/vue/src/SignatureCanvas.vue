@@ -144,6 +144,10 @@ function fromDataURL(url: string): Promise<void> {
   return kit!.fromDataURL(url)
 }
 
+function fromFile(file: File | Blob): Promise<void> {
+  return kit!.fromFile(file)
+}
+
 function toDataURL(type?: string, encoderOptions?: number): string {
   return kit!.toDataURL(type, encoderOptions)
 }
@@ -174,6 +178,7 @@ defineExpose({
   canRedo,
   addWaterMark,
   fromDataURL,
+  fromFile,
   toDataURL,
   toBlob,
   toFile,

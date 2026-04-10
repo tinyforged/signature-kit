@@ -92,6 +92,8 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
       toSVG: () => kitRef.current?.toSVG() ?? '',
       fromDataURL: (url: string) =>
         kitRef.current?.fromDataURL(url) ?? Promise.resolve(),
+      fromFile: (file: File | Blob) =>
+        kitRef.current?.fromFile(file) ?? Promise.resolve(),
       toData: () => kitRef.current?.toData() ?? [],
       fromData: (data: PointGroup[]) => kitRef.current?.fromData(data),
       addWatermark: (options: WatermarkOptions) =>

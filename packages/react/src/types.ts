@@ -59,6 +59,7 @@ export interface SignatureCanvasRef {
   toFile: (filename?: string, type?: string, quality?: number) => Promise<File>
   toSVG: () => string
   fromDataURL: (url: string) => Promise<void>
+  fromFile: (file: File | Blob) => Promise<void>
   toData: () => import('@tinyforged/signature-kit').PointGroup[]
   fromData: (data: import('@tinyforged/signature-kit').PointGroup[]) => void
   addWatermark: (options: WatermarkOptions) => void
