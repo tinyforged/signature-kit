@@ -1,7 +1,7 @@
 {
   "name": "signature-kit-monorepo",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Electronic signature plugin for Vue 3 and React",
   "license": "MIT",
   "author": "TinyForged",
