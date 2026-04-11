@@ -2,7 +2,13 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    branches:
+      - changeset-release/main
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
   workflow_dispatch:
 
 permissions:
