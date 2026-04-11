@@ -102,6 +102,19 @@ watch(
   },
 )
 
+watch(
+  () => props.watermark,
+  (newVal) => {
+    if (kit) {
+      if (newVal) {
+        kit.addWatermark(newVal)
+      } else {
+        kit.clearWatermark()
+      }
+    }
+  },
+)
+
 // --- Exposed methods ---
 
 function save(type: string = 'image/png'): string {
@@ -187,6 +200,8 @@ defineExpose({
   toFile,
   toSVG,
   trim,
+  toData: () => kit!.toData(),
+  fromData: (data: import('@tinyforged/signature-kit').PointGroup[]) => kit!.fromData(data),
   getKit: () => kit,
   getCanvas: () => canvasRef.value,
 })

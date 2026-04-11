@@ -52,11 +52,16 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
       const kit = new SignatureKit(canvasRef.current, buildOptions())
       kitRef.current = kit
 
-      kit.on('beginStroke', (detail) => props.onBegin?.(detail.originalEvent!))
-      kit.on('endStroke', (detail) => props.onEnd?.(detail.originalEvent!))
-      kit.on('clear', () => props.onClear?.())
-      kit.on('undo', () => props.onUndo?.())
-      kit.on('redo', () => props.onRedo?.())
+      const syncEvents = () => {
+        kit.offAll()
+        kit.on('beginStroke', (detail) => props.onBegin?.(detail.originalEvent!))
+        kit.on('endStroke', (detail) => props.onEnd?.(detail.originalEvent!))
+        kit.on('clear', () => props.onClear?.())
+        kit.on('undo', () => props.onUndo?.())
+        kit.on('redo', () => props.onRedo?.())
+      }
+
+      syncEvents()
 
       if (props.defaultUrl) {
         kit.fromDataURL(props.defaultUrl)
@@ -72,7 +77,8 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
     }, [])
 
     useEffect(() => {
-      kitRef.current?.updateOptions(buildOptions())
+      if (!kitRef.current) return
+      kitRef.current.updateOptions(buildOptions())
     }, [buildOptions])
 
     useImperativeHandle(ref, () => ({

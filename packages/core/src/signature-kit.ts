@@ -110,7 +110,16 @@ export class SignatureKit {
   }
 
   off(event: SignatureKitEventType, handler: SignatureKitEventHandler): void {
-    this._listeners.get(event)?.delete(handler)
+    const set = this._listeners.get(event)
+    set?.delete(handler)
+    if (set?.size === 0) {
+      this._listeners.delete(event)
+    }
+  }
+
+  /** Remove all custom event listeners */
+  offAll(): void {
+    this._listeners.clear()
   }
 
   private _emit(
@@ -309,6 +318,7 @@ export class SignatureKit {
     data.pop()
     this._sigPad.clear()
     this._sigPad.fromData(data, { clear: false })
+    this._applyWatermark()
     this._emit('undo', { type: 'undo' })
   }
 
@@ -323,6 +333,7 @@ export class SignatureKit {
     // Restore redo state
     this._sigPad.clear()
     this._sigPad.fromData(state, { clear: false })
+    this._applyWatermark()
     this._emit('redo', { type: 'redo' })
   }
 
@@ -404,6 +415,7 @@ export class SignatureKit {
         // Restore without scaling
         this._sigPad.fromData(data, { clear: false })
       }
+    this._applyWatermark()
     }
 
     this._lastSize = { width: newWidth, height: newHeight }
@@ -429,6 +441,7 @@ export class SignatureKit {
     this._redoStack.length = 0
     this._watermarkOptions = null
     this._listeners.clear()
+    this._colorCache.clear()
   }
 
   // --- Accessors ---
@@ -476,6 +489,7 @@ export class SignatureKit {
       if (data.length > 0) {
         this._sigPad.fromData(data, { clear: false })
       }
+      this._applyWatermark()
     }
 
     if (options.disabled !== undefined) {

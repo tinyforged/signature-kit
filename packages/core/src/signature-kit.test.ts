@@ -350,6 +350,98 @@ describe('SignatureKit', () => {
       expect(kit.watermark).toBeNull()
     })
   })
+
+  describe('offAll', () => {
+    it('should remove all event handlers', () => {
+      const clearHandler = vi.fn()
+      const undoHandler = vi.fn()
+      const redoHandler = vi.fn()
+      kit.on('clear', clearHandler)
+      kit.on('undo', undoHandler)
+      kit.on('redo', redoHandler)
+
+      kit.offAll()
+
+      kit.clear()
+      expect(clearHandler).not.toHaveBeenCalled()
+
+      kit.fromData([
+        {
+          points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+        },
+      ])
+      kit.undo()
+      expect(undoHandler).not.toHaveBeenCalled()
+
+      kit.redo()
+      expect(redoHandler).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('watermark persistence', () => {
+    it('should keep watermark after undo', () => {
+      kit.addWatermark({ text: 'WATERMARK' })
+      kit.fromData([
+        {
+          points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+        },
+        {
+          points: [{ x: 50, y: 50, time: Date.now() + 1, pressure: 0.5 }],
+        },
+      ])
+
+      kit.undo()
+
+      // Watermark options should still be stored
+      expect(kit.watermark).toEqual({ text: 'WATERMARK' })
+      // Canvas should not be empty (still has 1 stroke)
+      expect(kit.toData()).toHaveLength(1)
+    })
+
+    it('should keep watermark after redo', () => {
+      kit.addWatermark({ text: 'WATERMARK' })
+      kit.fromData([
+        {
+          points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+        },
+      ])
+
+      kit.undo()
+      kit.redo()
+
+      expect(kit.watermark).toEqual({ text: 'WATERMARK' })
+      expect(kit.toData()).toHaveLength(1)
+    })
+
+    it('should keep watermark after updateOptions backgroundColor change', () => {
+      kit.addWatermark({ text: 'WATERMARK' })
+      kit.fromData([
+        {
+          points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+        },
+      ])
+
+      kit.updateOptions({ backgroundColor: 'rgb(240, 240, 240)' })
+
+      expect(kit.watermark).toEqual({ text: 'WATERMARK' })
+      expect(kit.toData()).toHaveLength(1)
+    })
+
+    it('should keep watermark after clearWatermark and addWatermark cycle with strokes', () => {
+      kit.addWatermark({ text: 'FIRST' })
+      kit.fromData([
+        {
+          points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+        },
+      ])
+      kit.clearWatermark()
+      expect(kit.watermark).toBeNull()
+
+      kit.addWatermark({ text: 'SECOND' })
+      expect(kit.watermark).toEqual({ text: 'SECOND' })
+      expect(kit.toData()).toHaveLength(1)
+    })
+  })
 })
 
 describe('drawWatermark', () => {
