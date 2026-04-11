@@ -134,7 +134,16 @@ export class SignatureKit {
   clear(): void {
     this._saveUndoState()
     this._sigPad.clear()
+    this._applyWatermark()
     this._emit('clear', { type: 'clear' })
+  }
+
+  reset(): void {
+    this._sigPad.clear()
+    this._undoStack.length = 0
+    this._redoStack.length = 0
+    this._watermarkOptions = null
+    this._emit('reset', { type: 'reset' })
   }
 
   isEmpty(): boolean {
@@ -172,7 +181,10 @@ export class SignatureKit {
     url: string,
     options?: { ratio?: number; width?: number; height?: number },
   ): Promise<void> {
-    return this._sigPad.fromDataURL(url, options)
+    return this._sigPad.fromDataURL(url, options).then(() => {
+      this._undoStack.length = 0
+      this._redoStack.length = 0
+    })
   }
 
   fromFile(
@@ -185,7 +197,11 @@ export class SignatureKit {
         if (typeof reader.result === 'string') {
           this._sigPad
             .fromDataURL(reader.result, options)
-            .then(resolve)
+            .then(() => {
+              this._undoStack.length = 0
+              this._redoStack.length = 0
+              resolve()
+            })
             .catch(reject)
         } else {
           reject(new Error('Failed to read file'))
@@ -313,7 +329,7 @@ export class SignatureKit {
     if (this._redoStack.length >= MAX_UNDO_STACK) {
       this._redoStack.shift()
     }
-    this._redoStack.push([...data])
+    this._redoStack.push(this._cloneData(data))
     // Remove last stroke
     data.pop()
     this._sigPad.clear()
@@ -329,7 +345,7 @@ export class SignatureKit {
     if (this._undoStack.length >= MAX_UNDO_STACK) {
       this._undoStack.shift()
     }
-    this._undoStack.push(this._sigPad.toData())
+    this._undoStack.push(this._cloneData(this._sigPad.toData()))
     // Restore redo state
     this._sigPad.clear()
     this._sigPad.fromData(state, { clear: false })
@@ -400,14 +416,15 @@ export class SignatureKit {
 
     if (!this._options.clearOnResize && hasSignature) {
       if (this._options.scaleOnResize !== false) {
-        // Scale stroke points proportionally
-        const ratio = Math.min(newWidth / width, newHeight / height)
+        // Scale stroke points independently in X and Y
+        const ratioX = width > 0 && height > 0 ? newWidth / width : 1
+        const ratioY = width > 0 && height > 0 ? newHeight / height : 1
         const scaledData = data.map((group) => ({
           ...group,
           points: group.points.map((point) => ({
             ...point,
-            x: point.x * ratio,
-            y: point.y * ratio,
+            x: point.x * ratioX,
+            y: point.y * ratioY,
           })),
         }))
         this._sigPad.fromData(scaledData, { clear: false })
@@ -429,7 +446,14 @@ export class SignatureKit {
     if (this._undoStack.length >= MAX_UNDO_STACK) {
       this._undoStack.shift()
     }
-    this._undoStack.push(this._sigPad.toData())
+    this._undoStack.push(this._cloneData(this._sigPad.toData()))
+  }
+
+  private _cloneData(data: PointGroup[]): PointGroup[] {
+    return data.map((group) => ({
+      ...group,
+      points: group.points.map((point) => ({ ...point })),
+    }))
   }
 
   // --- Lifecycle ---

@@ -63,6 +63,7 @@ export type SignatureKitEventType =
   | 'beforeUpdateStroke'
   | 'afterUpdateStroke'
   | 'clear'
+  | 'reset'
   | 'undo'
   | 'redo'
   | 'resize'
