@@ -153,3 +153,6 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# IDE (other)
+.trae/
