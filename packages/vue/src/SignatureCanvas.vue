@@ -1,6 +1,5 @@
 <template>
   <div
-    ref="containerRef"
     :class="['signature-canvas-container', props.customClass]"
     :style="containerStyle"
   >
@@ -32,7 +31,6 @@ const props = withDefaults(defineProps<SignatureCanvasProps>(), {
 const emit = defineEmits<SignatureCanvasEmits>()
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
-const containerRef = ref<HTMLDivElement | null>(null)
 let kit: SignatureKit | null = null
 
 const containerStyle = computed(() => ({
