@@ -1,3 +1,1 @@
-Agent skills are defined in .agent/skills/ directory. Read and follow the SKILL.md files there.
-
-Available skills: check, release, test, sync-version, review, add-feature, fix-bug
+../.agent/skills
