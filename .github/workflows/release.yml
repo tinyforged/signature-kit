@@ -29,28 +29,9 @@ jobs:
       - run: pnpm test
 
       - name: Bump versions
-        run: |
-          pnpm --filter @tinyforged/signature-kit exec -- node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
-            pkg.version = '${{ inputs.version }}';
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
-          pnpm --filter @tinyforged/signature-kit-react exec -- node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
-            pkg.version = '${{ inputs.version }}';
-            pkg.dependencies['@tinyforged/signature-kit'] = '^\${{ inputs.version }}';
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
-          pnpm --filter @tinyforged/signature-kit-vue exec -- node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
-            pkg.version = '${{ inputs.version }}';
-            pkg.dependencies['@tinyforged/signature-kit'] = '^\${{ inputs.version }}';
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
-          pnpm install --no-frozen-lockfile
+        env:
+          VERSION: ${{ inputs.version }}
+        run: node .github/scripts/bump-versions.mjs
 
       - name: Publish to npm
         run: pnpm -r --filter "./packages/*" publish --access public --no-git-checks
