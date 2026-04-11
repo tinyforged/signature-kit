@@ -19,6 +19,22 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const kitRef = useRef<SignatureKit | null>(null)
 
+    // Store latest callback refs to avoid stale closures
+    const callbacksRef = useRef({
+      onBegin: props.onBegin,
+      onEnd: props.onEnd,
+      onClear: props.onClear,
+      onUndo: props.onUndo,
+      onRedo: props.onRedo,
+    })
+    callbacksRef.current = {
+      onBegin: props.onBegin,
+      onEnd: props.onEnd,
+      onClear: props.onClear,
+      onUndo: props.onUndo,
+      onRedo: props.onRedo,
+    }
+
     const buildOptions = useCallback((): SignatureKitOptions => {
       return {
         penColor: props.penColor ?? 'black',
@@ -54,11 +70,11 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
 
       const syncEvents = () => {
         kit.offAll()
-        kit.on('beginStroke', (detail) => props.onBegin?.(detail.originalEvent!))
-        kit.on('endStroke', (detail) => props.onEnd?.(detail.originalEvent!))
-        kit.on('clear', () => props.onClear?.())
-        kit.on('undo', () => props.onUndo?.())
-        kit.on('redo', () => props.onRedo?.())
+        kit.on('beginStroke', (detail) => callbacksRef.current.onBegin?.(detail.originalEvent!))
+        kit.on('endStroke', (detail) => callbacksRef.current.onEnd?.(detail.originalEvent!))
+        kit.on('clear', () => callbacksRef.current.onClear?.())
+        kit.on('undo', () => callbacksRef.current.onUndo?.())
+        kit.on('redo', () => callbacksRef.current.onRedo?.())
       }
 
       syncEvents()
@@ -84,6 +100,7 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
     useImperativeHandle(ref, () => ({
       isEmpty: () => kitRef.current?.isEmpty() ?? true,
       clear: () => kitRef.current?.clear(),
+      reset: () => kitRef.current?.reset(),
       save: (type?: string) => {
         const url = kitRef.current?.toDataURL(type) ?? ''
         props.onSave?.(url)

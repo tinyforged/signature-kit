@@ -52,6 +52,7 @@ export interface SignatureCanvasProps {
 export interface SignatureCanvasRef {
   isEmpty: () => boolean
   clear: () => void
+  reset: () => void
   undo: () => void
   redo: () => void
   canUndo: () => boolean

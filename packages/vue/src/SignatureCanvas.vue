@@ -127,6 +127,10 @@ function clear(): void {
   kit!.clear()
 }
 
+function reset(): void {
+  kit!.reset()
+}
+
 function isEmpty(): boolean {
   return kit!.isEmpty()
 }
@@ -186,6 +190,7 @@ function trim(options?: TrimOptions): TrimResult | null {
 defineExpose({
   save,
   clear,
+  reset,
   isEmpty,
   undo,
   redo,
