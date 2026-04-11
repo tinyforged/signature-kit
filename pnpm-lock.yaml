@@ -129,8 +129,8 @@ importers:
   packages/react:
     dependencies:
       '@tinyforged/signature-kit':
-        specifier: ^0.1.0
-        version: 0.1.0(signature_pad@5.1.3)
+        specifier: ^1.1.1
+        version: link:../core
       signature_pad:
         specifier: ^4.0.0 || ^5.0.0
         version: 5.1.3
@@ -157,8 +157,8 @@ importers:
   packages/vue:
     dependencies:
       '@tinyforged/signature-kit':
-        specifier: ^0.1.0
-        version: 0.1.0(signature_pad@5.1.3)
+        specifier: ^1.1.1
+        version: link:../core
       signature_pad:
         specifier: ^4.0.0 || ^5.0.0
         version: 5.1.3
@@ -1116,11 +1116,6 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
-
-  '@tinyforged/signature-kit@0.1.0':
-    resolution: {integrity: sha512-7Bar3jQbuCtzXs8FCPrMC1vd+qsp+qkxM/g2wwoKu9rzR54FOuepcCbTgckj3myOnllN1WBMhuBIq4pIhpDm+g==}
-    peerDependencies:
-      signature_pad: ^4.0.0 || ^5.0.0
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -4151,10 +4146,6 @@ snapshots:
       - '@types/node'
 
   '@standard-schema/spec@1.1.0': {}
-
-  '@tinyforged/signature-kit@0.1.0(signature_pad@5.1.3)':
-    dependencies:
-      signature_pad: 5.1.3
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
