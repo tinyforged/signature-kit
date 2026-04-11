@@ -6,7 +6,11 @@ allowed-tools:
   - Bash
 ---
 
-Run the full verification pipeline in strict order. Stop and report immediately if any step fails — do not continue to the next step.
+# Skill: Check
+
+Run the full verification pipeline for the signature-kit monorepo (test, typecheck, build, lint).
+
+Run in strict order. Stop and report immediately if any step fails — do not continue.
 
 ## Pipeline
 
@@ -27,8 +31,8 @@ pnpm run typecheck
   - `packages/core` → `tsc --noEmit`
   - `packages/react` → `tsc --noEmit`
   - `packages/vue` → `vue-tsc --noEmit`
-- Important: React and Vue packages resolve `@tinyforged/signature-kit` types from `node_modules`. If core types changed, run `pnpm build:core` first to update the declarations.
-- Common failure: TypeScript 6.0 deprecation warnings — these are suppressed via `ignoreDeprecations: "6.0"` in `tsconfig.base.json`
+- Important: React and Vue packages resolve `@tinyforged/signature-kit` types from `node_modules`. If core types changed, run `pnpm build:core` first to update declarations.
+- Common failure: TypeScript 6.0 deprecation warnings suppressed via `ignoreDeprecations: "6.0"` in `tsconfig.base.json`
 
 ### Step 3: Build
 ```bash
