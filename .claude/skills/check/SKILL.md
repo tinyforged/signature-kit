@@ -1,14 +1,65 @@
 ---
 name: check
-description: Run the full verification pipeline (test, typecheck, build, lint) for the signature-kit monorepo.
+description: Run the full verification pipeline for the signature-kit monorepo (test, typecheck, build, lint, format).
 disable-model-invocation: true
+allowed-tools:
+  - Bash
 ---
 
-Run the full verification pipeline for this project in order:
+Run the full verification pipeline in strict order. Stop and report immediately if any step fails — do not continue to the next step.
 
-1. `pnpm test` — all tests must pass (vitest)
-2. `pnpm run typecheck` — TypeScript type check across all packages
-3. `pnpm run build` — build core, react, and vue packages
-4. `pnpm run lint` — no lint errors
+## Pipeline
 
-Report each step's result clearly. If any step fails, analyze the error and suggest a fix.
+### Step 1: Tests
+```bash
+pnpm test
+```
+- Environment: `jsdom` (vitest config at root `vitest.config.ts`)
+- Test files: `packages/*/src/**/*.test.ts`
+- Currently only `packages/core/src/signature-kit.test.ts` has tests
+- Verify: all tests pass, report total count
+
+### Step 2: Type Check
+```bash
+pnpm run typecheck
+```
+- Runs in parallel across all workspace packages:
+  - `packages/core` → `tsc --noEmit`
+  - `packages/react` → `tsc --noEmit`
+  - `packages/vue` → `vue-tsc --noEmit`
+- Important: React and Vue packages resolve `@tinyforged/signature-kit` types from `node_modules`. If core types changed, run `pnpm build:core` first to update the declarations.
+- Common failure: TypeScript 6.0 deprecation warnings — these are suppressed via `ignoreDeprecations: "6.0"` in `tsconfig.base.json`
+
+### Step 3: Build
+```bash
+pnpm run build
+```
+- Builds all 3 publishable packages (not playground apps):
+  - `packages/core` → `tsup` (ESM + CJS + DTS)
+  - `packages/react` → `tsup` (ESM + CJS + DTS)
+  - `packages/vue` → `vite build` (ESM + UMD + DTS + CSS)
+- Verify output files exist in each `dist/` directory
+
+### Step 4: Lint
+```bash
+pnpm run lint
+```
+- Scope: `packages/*/src`
+- Config: ESLint flat config with `@eslint/js`, `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-vue`, `eslint-config-prettier`
+
+## Output Format
+
+```
+✅ Tests: 48 passed (0 failed)
+✅ TypeCheck: all packages
+✅ Build: core + react + vue
+✅ Lint: no errors
+```
+
+If any step fails:
+```
+❌ Tests: 2 failed
+   - watermark persistence > should keep watermark after undo
+   - Expected null, received { text: 'WATERMARK' }
+   → Suggestion: check _applyWatermark() call in undo()
+```
