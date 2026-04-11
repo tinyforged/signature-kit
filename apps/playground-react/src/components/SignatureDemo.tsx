@@ -21,7 +21,7 @@ const css = {
   previewHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.3rem 0', fontSize: '0.78rem', fontWeight: 600, color: '#888', textTransform: 'uppercase' as const, letterSpacing: '0.04em' },
   previewBody: { padding: '0.5rem', display: 'flex', justifyContent: 'center', background: "repeating-conic-gradient(#e8e8e8 0% 25%, #f5f5f5 0% 50%) 50% / 16px 16px", borderRadius: 4 },
   previewImg: { maxWidth: '100%', maxHeight: 160, border: '1px solid #e0e0e0', borderRadius: 4, background: 'white' },
-  sidebar: { width: 280, flexShrink: 0, borderLeft: '1px solid #f0f0f0', overflowY: 'auto' as const, maxHeight: 580 },
+  sidebar: { width: 280, flexShrink: 0, borderLeft: '1px solid #f0f0f0', overflowY: 'auto' as const, maxHeight: 620 },
   panelCollapsible: { padding: '0.6rem 0.75rem', borderBottom: '1px solid #f0f0f0' },
   panelSummary: { cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', userSelect: 'none' as const },
   panelArrow: { fontSize: '0.6rem', color: '#bbb', transition: 'transform 0.2s' },
@@ -41,24 +41,47 @@ const css = {
   btn: { display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.3rem 0.55rem', border: '1px solid #e0e0e0', borderRadius: 6, background: 'white', color: '#333', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 500, whiteSpace: 'nowrap' as const, transition: 'all 0.15s' },
   btnDisabled: { opacity: 0.35, cursor: 'not-allowed' },
   btnActive: { background: '#fef3e0', borderColor: '#f5a623', color: '#e67e00' },
+  btnDanger: { background: '#fff0f0', borderColor: '#e8a0a0', color: '#c53030' },
   btnPrimary: { display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.3rem 0.55rem', border: '1px solid #1a73e8', borderRadius: 6, background: '#1a73e8', color: 'white', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 500, whiteSpace: 'nowrap' as const, transition: 'all 0.15s' },
   btnOutline: { display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.3rem 0.55rem', border: '1px solid #bbb', borderRadius: 6, background: 'transparent', color: '#555', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 500, whiteSpace: 'nowrap' as const, transition: 'all 0.15s' },
   btnBlock: { width: '100%', justifyContent: 'center', marginTop: '0.25rem' },
   btnClose: { padding: '0.1rem 0.35rem', fontSize: '0.8rem', border: '1px solid #e0e0e0', borderRadius: 4, background: 'white', color: '#999', cursor: 'pointer', lineHeight: 1 },
+  checkboxRow: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' },
+  checkboxLabel: { fontSize: '0.72rem', fontWeight: 500, color: '#555', cursor: 'pointer' },
+  infoBox: { fontSize: '0.68rem', fontFamily: "'SF Mono','Fira Code','Consolas',monospace", color: '#666', background: '#f8f9fa', padding: '0.3rem 0.4rem', borderRadius: 4, border: '1px solid #eee', wordBreak: 'break-all' as const, marginTop: '0.25rem' },
+  fileInput: { display: 'none' },
 }
 
 export default function SignatureDemo() {
   const sigRef = useRef<SignatureCanvasRef>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Pen & Background
   const [penColor, setPenColor] = useState('#000000')
   const [backgroundColor, setBackgroundColor] = useState('#ffffff')
   const [minWidth, setMinWidth] = useState(0.5)
   const [maxWidth, setMaxWidth] = useState(2.5)
+
+  // Advanced pen settings
+  const [dotSize, setDotSize] = useState(0)
+  const [minDistance, setMinDistance] = useState(5)
+  const [velocityFilterWeight, setVelocityFilterWeight] = useState(0.7)
+  const [throttle, setThrottle] = useState(16)
+
+  // Resize settings
+  const [clearOnResize, setClearOnResize] = useState(false)
+  const [scaleOnResize, setScaleOnResize] = useState(true)
+
+  // UI state
   const [isDisabled, setIsDisabled] = useState(false)
   const [previewUrl, setPreviewUrl] = useState('')
   const [canUndoState, setCanUndoState] = useState(false)
   const [canRedoState, setCanRedoState] = useState(false)
+  const [saveCallbackUrl, setSaveCallbackUrl] = useState('')
+  const [dataInfo, setDataInfo] = useState('')
+  const [kitInfo, setKitInfo] = useState('')
 
+  // Watermark
   const [wm, setWm] = useState({
     text: 'Signature Kit\nTinyForged',
     fontSize: 24,
@@ -97,6 +120,28 @@ export default function SignatureDemo() {
     }
   }
 
+  function handleSaveBlob() {
+    sigRef.current?.toBlob('image/png').then((blob) => {
+      const url = URL.createObjectURL(blob)
+      setPreviewUrl(url)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'signature.png'
+      a.click()
+    })
+  }
+
+  function handleSaveFile() {
+    sigRef.current?.toFile('signature.png', 'image/png').then((file) => {
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = file.name
+      a.click()
+    })
+  }
+
   function handleSaveSVG() {
     const svg = sigRef.current?.toSVG()
     if (svg) {
@@ -112,6 +157,12 @@ export default function SignatureDemo() {
 
   function handleClear() {
     sigRef.current?.clear()
+    setPreviewUrl('')
+    updateCanStates()
+  }
+
+  function handleReset() {
+    sigRef.current?.reset()
     setPreviewUrl('')
     updateCanStates()
   }
@@ -146,8 +197,35 @@ export default function SignatureDemo() {
     sigRef.current?.addWatermark(opts)
   }
 
+  function handleLoadFile() {
+    fileInputRef.current?.click()
+  }
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    sigRef.current?.fromFile(file).then(() => updateCanStates())
+    e.target.value = ''
+  }
+
+  function handleShowData() {
+    const data = sigRef.current?.toData()
+    setDataInfo(`${data?.length ?? 0} stroke(s), ${data?.reduce((acc, g) => acc + g.points.length, 0) ?? 0} point(s)`)
+  }
+
+  function handleShowKitInfo() {
+    const kit = sigRef.current?.getKit()
+    const canvas = sigRef.current?.getCanvas()
+    if (kit && canvas) {
+      setKitInfo(`canvas: ${canvas.width}x${canvas.height}, disabled: ${kit.disabled}, watermark: ${kit.watermark ? 'yes' : 'no'}`)
+    }
+  }
+
   return (
     <div style={css.demo}>
+      {/* Hidden file input */}
+      <input ref={fileInputRef} type="file" accept="image/*" style={css.fileInput} onChange={onFileChange} />
+
       {/* Left: Canvas + Preview */}
       <div style={css.mainArea}>
         <div style={css.toolbar}>
@@ -155,12 +233,18 @@ export default function SignatureDemo() {
             <button style={css.btnPrimary} onClick={() => handleSave('image/png')}>PNG</button>
             <button style={css.btnPrimary} onClick={() => handleSave('image/jpeg')}>JPEG</button>
             <button style={css.btnPrimary} onClick={handleSaveSVG}>SVG</button>
+            <button style={css.btnOutline} onClick={handleSaveBlob}>Blob</button>
+            <button style={css.btnOutline} onClick={handleSaveFile}>File</button>
             <button style={css.btnOutline} onClick={handleTrim}>&#9986; Trim</button>
           </div>
           <div style={{ ...css.toolbarGroup, ...css.toolbarSep }}>
             <button style={{ ...css.btn, ...(canUndoState ? {} : css.btnDisabled) }} disabled={!canUndoState} onClick={handleUndo}>&#8617; Undo</button>
             <button style={{ ...css.btn, ...(canRedoState ? {} : css.btnDisabled) }} disabled={!canRedoState} onClick={handleRedo}>&#8618; Redo</button>
             <button style={css.btn} onClick={handleClear}>&#128465; Clear</button>
+            <button style={{ ...css.btn, ...css.btnDanger }} onClick={handleReset}>&#128260; Reset</button>
+          </div>
+          <div style={{ ...css.toolbarGroup, ...css.toolbarSep }}>
+            <button style={css.btnOutline} onClick={handleLoadFile}>&#128194; Load</button>
             <button style={{ ...css.btn, ...(isDisabled ? css.btnActive : {}) }} onClick={() => setIsDisabled(!isDisabled)}>
               {isDisabled ? '\u270F Edit' : '\uD83D\uDD12 Lock'}
             </button>
@@ -173,11 +257,18 @@ export default function SignatureDemo() {
             backgroundColor={backgroundColor}
             minWidth={minWidth}
             maxWidth={maxWidth}
+            dotSize={dotSize}
+            minDistance={minDistance}
+            velocityFilterWeight={velocityFilterWeight}
+            throttle={throttle}
+            clearOnResize={clearOnResize}
+            scaleOnResize={scaleOnResize}
             disabled={isDisabled}
             onBegin={() => updateCanStates()}
             onEnd={() => updateCanStates()}
             onUndo={() => updateCanStates()}
             onRedo={() => updateCanStates()}
+            onSave={(url) => setSaveCallbackUrl(url.slice(0, 60) + '...')}
           />
           {isDisabled && <div style={css.disabledOverlay}><span>Read-only mode</span></div>}
         </div>
@@ -196,6 +287,7 @@ export default function SignatureDemo() {
 
       {/* Right: Settings panel */}
       <aside style={css.sidebar}>
+        {/* Pen & Background */}
         <details open style={css.panelCollapsible}>
           <summary style={css.panelSummary}>
             <h3 style={css.panelTitle}>Pen &amp; Background</h3>
@@ -233,6 +325,66 @@ export default function SignatureDemo() {
           </div>
         </details>
 
+        {/* Advanced Pen */}
+        <details style={css.panelCollapsible}>
+          <summary style={css.panelSummary}>
+            <h3 style={css.panelTitle}>Advanced Pen</h3>
+            <span style={css.panelArrow}>{'\u25BE'}</span>
+          </summary>
+          <div style={css.panelBody}>
+            <div style={css.fieldRow}>
+              <label style={css.fieldLabel}>Dot Size (single click)</label>
+              <div style={css.sliderWrap}>
+                <input type="range" min="0" max="10" step="0.5" value={dotSize} onChange={(e) => setDotSize(Number(e.target.value))} style={css.rangeInput} />
+                <span style={css.sliderVal}>{dotSize}</span>
+              </div>
+            </div>
+            <div style={css.fieldRow}>
+              <label style={css.fieldLabel}>Min Distance (px)</label>
+              <div style={css.sliderWrap}>
+                <input type="range" min="1" max="20" step="1" value={minDistance} onChange={(e) => setMinDistance(Number(e.target.value))} style={css.rangeInput} />
+                <span style={css.sliderVal}>{minDistance}</span>
+              </div>
+            </div>
+            <div style={css.fieldRow}>
+              <label style={css.fieldLabel}>Velocity Filter Weight</label>
+              <div style={css.sliderWrap}>
+                <input type="range" min="0" max="1" step="0.05" value={velocityFilterWeight} onChange={(e) => setVelocityFilterWeight(Number(e.target.value))} style={css.rangeInput} />
+                <span style={css.sliderVal}>{velocityFilterWeight}</span>
+              </div>
+            </div>
+            <div style={css.fieldRow}>
+              <label style={css.fieldLabel}>Throttle (ms)</label>
+              <div style={css.sliderWrap}>
+                <input type="range" min="0" max="100" step="1" value={throttle} onChange={(e) => setThrottle(Number(e.target.value))} style={css.rangeInput} />
+                <span style={css.sliderVal}>{throttle}</span>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        {/* Resize Behavior */}
+        <details style={css.panelCollapsible}>
+          <summary style={css.panelSummary}>
+            <h3 style={css.panelTitle}>Resize Behavior</h3>
+            <span style={css.panelArrow}>{'\u25BE'}</span>
+          </summary>
+          <div style={css.panelBody}>
+            <div style={css.checkboxRow}>
+              <input type="checkbox" id="clearOnResize" checked={clearOnResize} onChange={(e) => setClearOnResize(e.target.checked)} />
+              <label htmlFor="clearOnResize" style={css.checkboxLabel}>Clear canvas on resize</label>
+            </div>
+            <div style={css.checkboxRow}>
+              <input type="checkbox" id="scaleOnResize" checked={scaleOnResize} onChange={(e) => setScaleOnResize(e.target.checked)} />
+              <label htmlFor="scaleOnResize" style={css.checkboxLabel}>Scale strokes on resize</label>
+            </div>
+            <p style={{ ...css.infoBox, fontSize: '0.65rem' }}>
+              Try resizing your browser window to see the effect.
+            </p>
+          </div>
+        </details>
+
+        {/* Watermark */}
         <details open style={css.panelCollapsible}>
           <summary style={css.panelSummary}>
             <h3 style={css.panelTitle}>Watermark</h3>
@@ -359,6 +511,26 @@ export default function SignatureDemo() {
             </div>
             <button style={{ ...css.btnPrimary, ...css.btnBlock }} onClick={handleWatermark}>Apply Watermark</button>
             <button style={{ ...css.btn, ...css.btnBlock }} onClick={handleClearWatermark}>Clear Watermark</button>
+          </div>
+        </details>
+
+        {/* Data & Info */}
+        <details style={css.panelCollapsible}>
+          <summary style={css.panelSummary}>
+            <h3 style={css.panelTitle}>Data &amp; Info</h3>
+            <span style={css.panelArrow}>{'\u25BE'}</span>
+          </summary>
+          <div style={css.panelBody}>
+            <button style={{ ...css.btnOutline, ...css.btnBlock }} onClick={handleShowData}>Show Stroke Data (toData)</button>
+            {dataInfo && <div style={css.infoBox}>{dataInfo}</div>}
+            <button style={{ ...css.btnOutline, ...css.btnBlock, marginTop: '0.5rem' }} onClick={handleShowKitInfo}>Show Kit Info (getKit/getCanvas)</button>
+            {kitInfo && <div style={css.infoBox}>{kitInfo}</div>}
+            {saveCallbackUrl && (
+              <>
+                <div style={{ ...css.fieldLabel, marginTop: '0.5rem' }}>onSave callback received:</div>
+                <div style={css.infoBox}>{saveCallbackUrl}</div>
+              </>
+            )}
           </div>
         </details>
       </aside>

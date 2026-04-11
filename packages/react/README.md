@@ -30,6 +30,8 @@ function App() {
       />
       <button onClick={() => alert(sigRef.current?.toDataURL())}>Save</button>
       <button onClick={() => sigRef.current?.undo()}>Undo</button>
+      <button onClick={() => sigRef.current?.clear()}>Clear</button>
+      <button onClick={() => sigRef.current?.reset()}>Reset</button>
     </div>
   )
 }

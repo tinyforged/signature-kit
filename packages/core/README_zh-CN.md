@@ -48,6 +48,12 @@ kit.clearWatermark()
 // 裁剪空白区域
 const result = kit.trim({ padding: 10 })
 
+// clear() 清除笔触但保留水印和撤销/重做历史
+kit.clear()
+
+// reset() 清除一切：笔触、水印、撤销/重做栈
+kit.reset()
+
 // 导入
 await kit.fromDataURL(dataUrl)
 await kit.fromFile(file)

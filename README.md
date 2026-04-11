@@ -102,6 +102,12 @@ const result = kit.trim({ padding: 10 })
 // Update options dynamically
 kit.updateOptions({ penColor: 'red', maxWidth: 3 })
 
+// clear() removes strokes but keeps watermark and undo/redo history
+kit.clear()
+
+// reset() removes everything: strokes, watermark, undo/redo stacks
+kit.reset()
+
 // Disable drawing
 kit.disabled = true
 
@@ -132,7 +138,8 @@ kit.destroy()
 
 | Method | Returns | Description |
 |---|---|---|
-| `clear()` | `void` | Clear the canvas and all strokes |
+| `clear()` | `void` | Clear strokes, keep watermark and undo/redo stacks |
+| `reset()` | `void` | Clear everything: strokes, watermark, undo/redo stacks |
 | `isEmpty()` | `boolean` | Whether the canvas is empty |
 | `undo()` | `void` | Undo the last stroke |
 | `redo()` | `void` | Redo the last undone stroke |
@@ -150,6 +157,7 @@ kit.destroy()
 | `updateOptions(options)` | `void` | Update options dynamically |
 | `on(event, handler)` | `void` | Subscribe to event |
 | `off(event, handler)` | `void` | Unsubscribe from event |
+| `offAll()` | `void` | Remove all event listeners |
 | `destroy()` | `void` | Cleanup observer and listeners |
 
 #### Properties
@@ -171,7 +179,8 @@ kit.destroy()
 | `endStroke` | `{ originalEvent }` | Stroke ended |
 | `beforeUpdateStroke` | `{}` | Before stroke point is added |
 | `afterUpdateStroke` | `{}` | After stroke point is added |
-| `clear` | `{}` | Canvas cleared |
+| `clear` | `{}` | Canvas cleared (strokes only, watermark preserved) |
+| `reset` | `{}` | Everything reset (strokes, watermark, undo/redo stacks) |
 | `undo` | `{}` | Undo performed |
 | `redo` | `{}` | Redo performed |
 | `resize` | `{}` | Canvas resized |
@@ -288,6 +297,7 @@ function onEnd(e: MouseEvent | TouchEvent) {}
 | `end-stroke` | `MouseEvent \| TouchEvent` | Stroke ended |
 | `save` | `string` | Triggered by `save()` method |
 | `clear` | - | Canvas cleared |
+| `reset` | - | Everything reset |
 | `undo` | - | Undo performed |
 | `redo` | - | Redo performed |
 
@@ -296,6 +306,7 @@ function onEnd(e: MouseEvent | TouchEvent) {}
 ```ts
 sigRef.value?.save(type?: string): string
 sigRef.value?.clear(): void
+sigRef.value?.reset(): void
 sigRef.value?.isEmpty(): boolean
 sigRef.value?.undo(): void
 sigRef.value?.redo(): void
@@ -378,6 +389,7 @@ function App() {
 | `onClear` | `() => void` | - | Canvas cleared |
 | `onUndo` | `() => void` | - | Undo performed |
 | `onRedo` | `() => void` | - | Redo performed |
+| `onRedo` | `() => void` | - | Redo performed |
 | `onSave` | `(dataUrl) => void` | - | Triggered by `save()` ref method |
 
 ### Ref Methods
@@ -385,6 +397,7 @@ function App() {
 ```ts
 sigRef.current?.isEmpty(): boolean
 sigRef.current?.clear(): void
+sigRef.current?.reset(): void
 sigRef.current?.undo(): void
 sigRef.current?.redo(): void
 sigRef.current?.canUndo(): boolean

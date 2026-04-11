@@ -1,5 +1,8 @@
 <template>
   <div class="demo">
+    <!-- Hidden file input -->
+    <input ref="fileInputRef" type="file" accept="image/*" style="display:none" @change="onFileChange" />
+
     <!-- Left: Canvas + Preview -->
     <div class="main-area">
       <div class="toolbar">
@@ -7,12 +10,18 @@
           <button class="btn btn-primary" @click="handleSave('image/png')">PNG</button>
           <button class="btn btn-primary" @click="handleSave('image/jpeg')">JPEG</button>
           <button class="btn btn-primary" @click="handleSaveSVG">SVG</button>
+          <button class="btn btn-outline" @click="handleSaveBlob">Blob</button>
+          <button class="btn btn-outline" @click="handleSaveFile">File</button>
           <button class="btn btn-outline" @click="handleTrim">&#9986; Trim</button>
         </div>
         <div class="toolbar-group">
           <button class="btn" @click="handleUndo" :disabled="!canUndo">&#8617; Undo</button>
           <button class="btn" @click="handleRedo" :disabled="!canRedo">&#8618; Redo</button>
           <button class="btn" @click="handleClear">&#128465; Clear</button>
+          <button class="btn btn-danger" @click="handleReset">&#128260; Reset</button>
+        </div>
+        <div class="toolbar-group">
+          <button class="btn btn-outline" @click="handleLoadFile">&#128194; Load</button>
           <button class="btn" :class="{ active: isDisabled }" @click="isDisabled = !isDisabled">
             {{ isDisabled ? '&#9999; Edit' : '&#128274; Lock' }}
           </button>
@@ -25,6 +34,12 @@
           :background-color="backgroundColor"
           :min-width="minWidth"
           :max-width="maxWidth"
+          :dot-size="dotSize"
+          :min-distance="minDistance"
+          :velocity-filter-weight="velocityFilterWeight"
+          :throttle="throttle"
+          :clear-on-resize="clearOnResize"
+          :scale-on-resize="scaleOnResize"
           :disabled="isDisabled"
           width="100%"
           height="100%"
@@ -52,6 +67,7 @@
 
     <!-- Right: Settings panel -->
     <aside class="sidebar">
+      <!-- Pen & Background -->
       <details class="panel-collapsible" open>
         <summary class="panel-summary">
           <h3 class="panel-title">Pen &amp; Background</h3>
@@ -89,6 +105,66 @@
         </div>
       </details>
 
+      <!-- Advanced Pen -->
+      <details class="panel-collapsible">
+        <summary class="panel-summary">
+          <h3 class="panel-title">Advanced Pen</h3>
+          <span class="panel-arrow">&#9662;</span>
+        </summary>
+        <div class="panel-body">
+          <div class="field-row">
+            <label class="field-label">Dot Size (single click)</label>
+            <div class="slider-wrap">
+              <input type="range" min="0" max="10" step="0.5" v-model.number="dotSize" />
+              <span class="slider-val">{{ dotSize }}</span>
+            </div>
+          </div>
+          <div class="field-row">
+            <label class="field-label">Min Distance (px)</label>
+            <div class="slider-wrap">
+              <input type="range" min="1" max="20" step="1" v-model.number="minDistance" />
+              <span class="slider-val">{{ minDistance }}</span>
+            </div>
+          </div>
+          <div class="field-row">
+            <label class="field-label">Velocity Filter Weight</label>
+            <div class="slider-wrap">
+              <input type="range" min="0" max="1" step="0.05" v-model.number="velocityFilterWeight" />
+              <span class="slider-val">{{ velocityFilterWeight }}</span>
+            </div>
+          </div>
+          <div class="field-row">
+            <label class="field-label">Throttle (ms)</label>
+            <div class="slider-wrap">
+              <input type="range" min="0" max="100" step="1" v-model.number="throttle" />
+              <span class="slider-val">{{ throttle }}</span>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <!-- Resize Behavior -->
+      <details class="panel-collapsible">
+        <summary class="panel-summary">
+          <h3 class="panel-title">Resize Behavior</h3>
+          <span class="panel-arrow">&#9662;</span>
+        </summary>
+        <div class="panel-body">
+          <div class="checkbox-row">
+            <input type="checkbox" id="clearOnResize" v-model="clearOnResize" />
+            <label for="clearOnResize" class="checkbox-label">Clear canvas on resize</label>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="scaleOnResize" v-model="scaleOnResize" />
+            <label for="scaleOnResize" class="checkbox-label">Scale strokes on resize</label>
+          </div>
+          <p class="info-box">
+            Try resizing your browser window to see the effect.
+          </p>
+        </div>
+      </details>
+
+      <!-- Watermark -->
       <details class="panel-collapsible" open>
         <summary class="panel-summary">
           <h3 class="panel-title">Watermark</h3>
@@ -217,6 +293,24 @@
           <button class="btn btn-block" @click="handleClearWatermark">Clear Watermark</button>
         </div>
       </details>
+
+      <!-- Data & Info -->
+      <details class="panel-collapsible">
+        <summary class="panel-summary">
+          <h3 class="panel-title">Data &amp; Info</h3>
+          <span class="panel-arrow">&#9662;</span>
+        </summary>
+        <div class="panel-body">
+          <button class="btn btn-outline btn-block" @click="handleShowData">Show Stroke Data (toData)</button>
+          <div v-if="dataInfo" class="info-box">{{ dataInfo }}</div>
+          <button class="btn btn-outline btn-block" style="margin-top:0.5rem" @click="handleShowKitInfo">Show Kit Info (getKit/getCanvas)</button>
+          <div v-if="kitInfo" class="info-box">{{ kitInfo }}</div>
+          <div v-if="saveCallbackUrl" style="margin-top:0.5rem">
+            <div class="field-label">onSave callback received:</div>
+            <div class="info-box">{{ saveCallbackUrl }}</div>
+          </div>
+        </div>
+      </details>
     </aside>
   </div>
 </template>
@@ -226,16 +320,34 @@ import { ref, reactive } from 'vue'
 import { SignatureCanvas } from '@tinyforged/signature-kit-vue'
 
 const sigRef = ref<InstanceType<typeof SignatureCanvas> | null>(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
 
+// Pen & Background
 const penColor = ref('#000000')
 const backgroundColor = ref('#ffffff')
 const minWidth = ref(0.5)
 const maxWidth = ref(2.5)
+
+// Advanced pen settings
+const dotSize = ref(0)
+const minDistance = ref(5)
+const velocityFilterWeight = ref(0.7)
+const throttle = ref(16)
+
+// Resize settings
+const clearOnResize = ref(false)
+const scaleOnResize = ref(true)
+
+// UI state
 const isDisabled = ref(false)
 const previewUrl = ref('')
 const canUndo = ref(false)
 const canRedo = ref(false)
+const saveCallbackUrl = ref('')
+const dataInfo = ref('')
+const kitInfo = ref('')
 
+// Watermark
 const wm = reactive({
   text: 'Signature Kit\nTinyForged',
   fontSize: 24,
@@ -272,6 +384,28 @@ function handleSave(type: string) {
   }
 }
 
+function handleSaveBlob() {
+  sigRef.value?.toBlob('image/png').then((blob) => {
+    const url = URL.createObjectURL(blob)
+    previewUrl.value = url
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'signature.png'
+    a.click()
+  })
+}
+
+function handleSaveFile() {
+  sigRef.value?.toFile('signature.png', 'image/png').then((file) => {
+    const url = URL.createObjectURL(file)
+    previewUrl.value = url
+    const a = document.createElement('a')
+    a.href = url
+    a.download = file.name
+    a.click()
+  })
+}
+
 function handleSaveSVG() {
   const svg = sigRef.value?.toSVG()
   if (svg) {
@@ -287,6 +421,12 @@ function handleSaveSVG() {
 
 function handleClear() {
   sigRef.value?.clear()
+  previewUrl.value = ''
+  updateCanStates()
+}
+
+function handleReset() {
+  sigRef.value?.reset()
   previewUrl.value = ''
   updateCanStates()
 }
@@ -333,11 +473,40 @@ function handleClearWatermark() {
   sigRef.value?.clearWatermark()
 }
 
+function handleLoadFile() {
+  fileInputRef.value?.click()
+}
+
+function onFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  sigRef.value?.fromFile(file).then(() => updateCanStates())
+  input.value = ''
+}
+
+function handleShowData() {
+  const data = sigRef.value?.toData()
+  const strokes = data?.length ?? 0
+  const points = data?.reduce((acc, g) => acc + g.points.length, 0) ?? 0
+  dataInfo.value = `${strokes} stroke(s), ${points} point(s)`
+}
+
+function handleShowKitInfo() {
+  const kit = sigRef.value?.getKit()
+  const canvas = sigRef.value?.getCanvas()
+  if (kit && canvas) {
+    kitInfo.value = `canvas: ${canvas.width}x${canvas.height}, disabled: ${kit.disabled}, watermark: ${kit.watermark ? 'yes' : 'no'}`
+  }
+}
+
 function onBegin() { updateCanStates() }
 function onEnd() { updateCanStates() }
 function onUndo() { updateCanStates() }
 function onRedo() { updateCanStates() }
-function onSave(_dataUrl: string) {}
+function onSave(url: string) {
+  saveCallbackUrl.value = url.slice(0, 60) + '...'
+}
 
 function updateCanStates() {
   canUndo.value = sigRef.value?.canUndo() ?? false
@@ -457,7 +626,7 @@ function updateCanStates() {
   flex-shrink: 0;
   border-left: 1px solid #f0f0f0;
   overflow-y: auto;
-  max-height: 580px;
+  max-height: 620px;
 }
 
 .panel-collapsible {
@@ -617,6 +786,34 @@ textarea:focus {
   border-color: #1a73e8;
 }
 
+/* Checkbox */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.checkbox-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+}
+
+/* Info box */
+.info-box {
+  font-size: 0.68rem;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  color: #666;
+  background: #f8f9fa;
+  padding: 0.3rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #eee;
+  word-break: break-all;
+  margin-top: 0.25rem;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -667,6 +864,16 @@ textarea:focus {
 
 .btn-outline:hover:not(:disabled) {
   background: #f5f5f5;
+}
+
+.btn-danger {
+  background: #fff0f0;
+  border-color: #e8a0a0;
+  color: #c53030;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #fee2e2;
 }
 
 .btn.active {

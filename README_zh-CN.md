@@ -102,6 +102,12 @@ const result = kit.trim({ padding: 10 })
 // Update options dynamically
 kit.updateOptions({ penColor: 'red', maxWidth: 3 })
 
+// clear() removes strokes but keeps watermark and undo/redo history
+kit.clear()
+
+// reset() removes everything: strokes, watermark, undo/redo stacks
+kit.reset()
+
 // Disable drawing
 kit.disabled = true
 
@@ -132,7 +138,8 @@ kit.destroy()
 
 | 方法 | 返回值 | 描述 |
 |---|---|---|
-| `clear()` | `void` | 清空画布和所有笔触 |
+| `clear()` | `void` | 清除笔触，保留水印和撤销/重做栈 |
+| `reset()` | `void` | 清除一切：笔触、水印、撤销/重做栈 |
 | `isEmpty()` | `boolean` | 画布是否为空 |
 | `undo()` | `void` | 撤销最后一笔 |
 | `redo()` | `void` | 重做最后一次撤销的笔触 |
@@ -150,6 +157,7 @@ kit.destroy()
 | `updateOptions(options)` | `void` | 动态更新选项 |
 | `on(event, handler)` | `void` | 订阅事件 |
 | `off(event, handler)` | `void` | 取消订阅事件 |
+| `offAll()` | `void` | 移除所有事件监听器 |
 | `destroy()` | `void` | 清理观察器和监听器 |
 
 #### 属性
@@ -171,7 +179,8 @@ kit.destroy()
 | `endStroke` | `{ originalEvent }` | 笔触结束 |
 | `beforeUpdateStroke` | `{}` | 笔触点添加之前 |
 | `afterUpdateStroke` | `{}` | 笔触点添加之后 |
-| `clear` | `{}` | 画布已清空 |
+| `clear` | `{}` | 画布已清空（仅笔触，水印保留） |
+| `reset` | `{}` | 全部重置（笔触、水印、撤销/重做栈） |
 | `undo` | `{}` | 执行了撤销 |
 | `redo` | `{}` | 执行了重做 |
 | `resize` | `{}` | 画布已调整大小 |
@@ -288,6 +297,7 @@ function onEnd(e: MouseEvent | TouchEvent) {}
 | `end-stroke` | `MouseEvent \| TouchEvent` | 笔触结束 |
 | `save` | `string` | 由 `save()` 方法触发 |
 | `clear` | - | 画布已清空 |
+| `reset` | - | 全部重置 |
 | `undo` | - | 执行了撤销 |
 | `redo` | - | 执行了重做 |
 
@@ -296,6 +306,7 @@ function onEnd(e: MouseEvent | TouchEvent) {}
 ```ts
 sigRef.value?.save(type?: string): string
 sigRef.value?.clear(): void
+sigRef.value?.reset(): void
 sigRef.value?.isEmpty(): boolean
 sigRef.value?.undo(): void
 sigRef.value?.redo(): void
@@ -385,6 +396,7 @@ function App() {
 ```ts
 sigRef.current?.isEmpty(): boolean
 sigRef.current?.clear(): void
+sigRef.current?.reset(): void
 sigRef.current?.undo(): void
 sigRef.current?.redo(): void
 sigRef.current?.canUndo(): boolean

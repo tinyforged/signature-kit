@@ -24,6 +24,8 @@ npm install @tinyforged/signature-kit-vue
   />
   <button @click="handleSave">Save</button>
   <button @click="sigRef?.undo()">Undo</button>
+  <button @click="sigRef?.clear()">Clear</button>
+  <button @click="sigRef?.reset()">Reset</button>
 </template>
 
 <script setup lang="ts">

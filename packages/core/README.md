@@ -48,6 +48,12 @@ kit.clearWatermark()
 // Trim whitespace
 const result = kit.trim({ padding: 10 })
 
+// clear() removes strokes but keeps watermark and undo/redo history
+kit.clear()
+
+// reset() removes everything: strokes, watermark, undo/redo stacks
+kit.reset()
+
 // Import
 await kit.fromDataURL(dataUrl)
 await kit.fromFile(file)
