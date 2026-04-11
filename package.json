@@ -20,10 +20,7 @@
     "format": "prettier --write \"packages/*/src/**/*.{ts,tsx,vue}\"",
     "format:check": "prettier --check \"packages/*/src/**/*.{ts,tsx,vue}\"",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "pnpm build && pnpm -r publish --access public --no-git-checks"
+    "test:watch": "vitest"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -31,8 +28,6 @@
   },
   "packageManager": "pnpm@9.15.0",
   "devDependencies": {
-    "@changesets/changelog-github": "^0.6.0",
-    "@changesets/cli": "^2.30.0",
     "@eslint/js": "^10.0.1",
     "canvas": "^3.2.3",
     "eslint": "^10.2.0",
