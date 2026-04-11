@@ -1,16 +1,16 @@
-English | [中文](README_zh-CN.md)
+[English](README.md) | 中文
 
 # @tinyforged/signature-kit
 
-Framework-agnostic electronic signature core with undo, watermark, and resize support. Powered by [signature_pad](https://github.com/szimek/signature_pad).
+与框架无关的电子签名核心库，支持撤销、水印和画布缩放。基于 [signature_pad](https://github.com/szimek/signature_pad) 构建。
 
-## Installation
+## 安装
 
 ```bash
 npm install @tinyforged/signature-kit
 ```
 
-## Quick Start
+## 快速开始
 
 ```ts
 import { SignatureKit } from '@tinyforged/signature-kit'
@@ -23,20 +23,20 @@ const kit = new SignatureKit(canvas, {
   maxWidth: 2.5,
 })
 
-// Events
+// 事件
 kit.on('endStroke', (detail) => console.log('signed'))
 kit.on('resize', () => console.log('canvas resized'))
 
-// Export
+// 导出
 const dataUrl = kit.toDataURL('image/png')
 const blob = await kit.toBlob('image/png')
 const svg = kit.toSVG()
 
-// Undo / Redo
+// 撤销 / 重做
 kit.undo()
 kit.redo()
 
-// Watermark
+// 水印
 kit.addWatermark({
   text: 'CONFIDENTIAL',
   fontSize: 20,
@@ -45,21 +45,21 @@ kit.addWatermark({
 })
 kit.clearWatermark()
 
-// Trim whitespace
+// 裁剪空白区域
 const result = kit.trim({ padding: 10 })
 
-// Import
+// 导入
 await kit.fromDataURL(dataUrl)
 await kit.fromFile(file)
 
-// Cleanup
+// 清理
 kit.destroy()
 ```
 
 ## API
 
-See the [full documentation](https://github.com/TinyForged/signature-kit#core) for complete API reference.
+查看[完整文档](https://github.com/TinyForged/signature-kit#core)获取完整的 API 参考。
 
-## License
+## 许可证
 
 MIT

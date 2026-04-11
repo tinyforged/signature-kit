@@ -1,16 +1,16 @@
-English | [中文](README_zh-CN.md)
+[English](README.md) | 中文
 
 # @tinyforged/signature-kit-vue
 
-Vue 3 electronic signature component.
+Vue 3 电子签名组件。
 
-## Installation
+## 安装
 
 ```bash
 npm install @tinyforged/signature-kit-vue
 ```
 
-## Quick Start
+## 快速开始
 
 ```vue
 <template>
@@ -44,8 +44,8 @@ function onEnd() {
 
 ## API
 
-See the [full documentation](https://github.com/TinyForged/signature-kit#vue-3) for props, events, and ref methods.
+查看[完整文档](https://github.com/TinyForged/signature-kit#vue-3)获取属性、事件和 ref 方法的说明。
 
-## License
+## 许可证
 
 MIT

@@ -1,3 +1,5 @@
+English | [中文](RELEASE_zh-CN.md)
+
 # Release Guide
 
 ## How to Publish a New Version

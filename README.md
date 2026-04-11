@@ -1,3 +1,5 @@
+English | [中文](README_zh-CN.md)
+
 # @tinyforged/signature-kit
 
 A set of framework-agnostic electronic signature libraries for Vue 3 and React. Powered by [signature_pad](https://github.com/szimek/signature_pad).

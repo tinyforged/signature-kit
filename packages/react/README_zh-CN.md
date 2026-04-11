@@ -1,16 +1,16 @@
-English | [中文](README_zh-CN.md)
+[English](README.md) | 中文
 
 # @tinyforged/signature-kit-react
 
-React electronic signature component.
+React 电子签名组件。
 
-## Installation
+## 安装
 
 ```bash
 npm install @tinyforged/signature-kit-react
 ```
 
-## Quick Start
+## 快速开始
 
 ```tsx
 import { useRef } from 'react'
@@ -37,8 +37,8 @@ function App() {
 
 ## API
 
-See the [full documentation](https://github.com/TinyForged/signature-kit#react) for props, events, and ref methods.
+查看[完整文档](https://github.com/TinyForged/signature-kit#react)获取属性、事件和 ref 方法的说明。
 
-## License
+## 许可证
 
 MIT
