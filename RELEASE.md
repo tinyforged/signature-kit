@@ -1,10 +1,5 @@
 # Release Guide
 
-## Prerequisites
-
-- GitHub organization secret `NPM_TOKEN` must be configured with publish access to `@tinyforged` scope
-- GitHub organization secret `GH_TOKEN` must have `repo` and `write:packages` permissions
-
 ## How to Publish a New Version
 
 1. Open **Actions → Release** workflow: https://github.com/TinyForged/signature-kit/actions/workflows/release.yml
@@ -41,12 +36,6 @@ The workflow automatically bumps all three `package.json` files to the specified
 ### Publish failed, no release/tag created
 
 This is by design. Fix the issue (e.g. build error, test failure) and re-run the workflow with the same version.
-
-### npm 404 error
-
-Check that `NPM_TOKEN` has access to this repository:
-- Go to https://github.com/organizations/tinyforged/settings/secrets/actions
-- Click `NPM_TOKEN` → ensure **Repository access** includes `signature-kit`
 
 ### Need to re-publish the same version
 
