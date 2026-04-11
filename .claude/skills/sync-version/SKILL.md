@@ -1,3 +1,10 @@
+---
+name: sync-version
+description: Synchronize version numbers across all 3 packages (core, react, vue).
+argument-hint: <version>
+disable-model-invocation: true
+---
+
 Synchronize version numbers across all 3 packages.
 
 Arguments: $ARGUMENTS — target version (e.g. "1.2.0")
