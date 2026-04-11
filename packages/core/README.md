@@ -5,7 +5,7 @@ Framework-agnostic electronic signature core with undo, watermark, and resize su
 ## Installation
 
 ```bash
-npm install @tinyforged/signature-kit signature_pad
+npm install @tinyforged/signature-kit
 ```
 
 ## Quick Start
@@ -23,6 +23,7 @@ const kit = new SignatureKit(canvas, {
 
 // Events
 kit.on('endStroke', (detail) => console.log('signed'))
+kit.on('resize', () => console.log('canvas resized'))
 
 // Export
 const dataUrl = kit.toDataURL('image/png')

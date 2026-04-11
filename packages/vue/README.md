@@ -5,7 +5,7 @@ Vue 3 electronic signature component.
 ## Installation
 
 ```bash
-npm install @tinyforged/signature-kit-vue vue signature_pad
+npm install @tinyforged/signature-kit-vue
 ```
 
 ## Quick Start

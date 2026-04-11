@@ -26,14 +26,16 @@ A set of framework-agnostic electronic signature libraries for Vue 3 and React. 
 
 ```bash
 # Core (framework-agnostic)
-npm install @tinyforged/signature-kit signature_pad
+npm install @tinyforged/signature-kit
 
 # Vue 3
-npm install @tinyforged/signature-kit-vue vue signature_pad
+npm install @tinyforged/signature-kit-vue
 
 # React
-npm install @tinyforged/signature-kit-react react react-dom signature_pad
+npm install @tinyforged/signature-kit-react
 ```
+
+> `signature_pad` is included as a dependency — no need to install it separately.
 
 ---
 
@@ -57,6 +59,7 @@ const kit = new SignatureKit(canvas, {
 // Events
 kit.on('beginStroke', (detail) => console.log('started', detail.originalEvent))
 kit.on('endStroke', (detail) => console.log('ended', detail.originalEvent))
+kit.on('resize', () => console.log('canvas resized'))
 
 // Export
 const dataUrl = kit.toDataURL('image/png')
@@ -119,6 +122,7 @@ kit.destroy()
 | `clearOnResize` | `boolean` | `false` | Clear canvas on container resize |
 | `scaleOnResize` | `boolean` | `true` | Scale strokes proportionally on resize |
 | `disabled` | `boolean` | `false` | Disable drawing |
+| `onResize` | `(size) => void` | - | Callback when the canvas resizes |
 
 ### API
 
@@ -168,6 +172,7 @@ kit.destroy()
 | `clear` | `{}` | Canvas cleared |
 | `undo` | `{}` | Undo performed |
 | `redo` | `{}` | Redo performed |
+| `resize` | `{}` | Canvas resized |
 
 ### Watermark Options
 
@@ -178,6 +183,7 @@ kit.destroy()
 | `fontFamily` | `string` | `'sans-serif'` | CSS font family |
 | `fontStyle` | `'normal' \| 'italic' \| 'oblique'` | `'normal'` | Font style |
 | `fontWeight` | `string \| number` | `'normal'` | Font weight |
+| `fontVariant` | `'normal' \| 'small-caps'` | `'normal'` | Font variant |
 | `style` | `'fill' \| 'stroke' \| 'all'` | `'fill'` | Render mode |
 | `fillStyle` | `string` | `'rgba(0,0,0,0.15)'` | Fill color |
 | `strokeStyle` | `string` | `'rgba(0,0,0,0.15)'` | Stroke color |
@@ -293,7 +299,7 @@ sigRef.value?.undo(): void
 sigRef.value?.redo(): void
 sigRef.value?.canUndo(): boolean
 sigRef.value?.canRedo(): boolean
-sigRef.value?.addWaterMark(options: WatermarkOptions): void
+sigRef.value?.addWatermark(options: WatermarkOptions): void
 sigRef.value?.clearWatermark(): void
 sigRef.value?.fromDataURL(url: string): Promise<void>
 sigRef.value?.fromFile(file: File | Blob): Promise<void>
@@ -370,6 +376,7 @@ function App() {
 | `onClear` | `() => void` | - | Canvas cleared |
 | `onUndo` | `() => void` | - | Undo performed |
 | `onRedo` | `() => void` | - | Redo performed |
+| `onSave` | `(dataUrl) => void` | - | Triggered by `save()` ref method |
 
 ### Ref Methods
 
@@ -405,6 +412,18 @@ pnpm install
 
 # Build all packages
 pnpm build
+
+# Type check
+pnpm typecheck
+
+# Run tests
+pnpm test
+
+# Lint
+pnpm lint
+
+# Format
+pnpm format
 
 # Start playgrounds
 pnpm dev:vue

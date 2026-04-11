@@ -5,7 +5,7 @@ React electronic signature component.
 ## Installation
 
 ```bash
-npm install @tinyforged/signature-kit-react react react-dom signature_pad
+npm install @tinyforged/signature-kit-react
 ```
 
 ## Quick Start
