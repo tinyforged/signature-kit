@@ -1,6 +1,6 @@
 {
   "name": "@tinyforged/signature-kit-vue",
-  "version": "1.1.1",
+  "version": "1.0.0",
   "description": "Vue 3 electronic signature component",
   "license": "MIT",
   "author": "TinyForged",
@@ -29,7 +29,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@tinyforged/signature-kit": "^1.1.1",
+    "@tinyforged/signature-kit": "^1.0.0",
     "signature_pad": "^4.0.0 || ^5.0.0"
   },
   "peerDependencies": {
