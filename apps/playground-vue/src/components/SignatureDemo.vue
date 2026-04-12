@@ -15,8 +15,8 @@
           <button class="btn btn-outline" @click="handleTrim">&#9986; Trim</button>
         </div>
         <div class="toolbar-group">
-          <button class="btn" @click="handleUndo" :disabled="!canUndo">&#8617; Undo</button>
-          <button class="btn" @click="handleRedo" :disabled="!canRedo">&#8618; Redo</button>
+          <button class="btn" @click="handleUndo" :disabled="!activeCanUndo">&#8617; Undo</button>
+          <button class="btn" @click="handleRedo" :disabled="!activeCanRedo">&#8618; Redo</button>
           <button class="btn" @click="handleClear">&#128465; Clear</button>
           <button class="btn btn-danger" @click="handleReset">&#128260; Reset</button>
         </div>
@@ -26,9 +26,22 @@
             {{ isDisabled ? '&#9999; Edit' : '&#128274; Lock' }}
           </button>
         </div>
+        <div class="mode-switch">
+          <button
+            class="mode-btn"
+            :class="{ 'mode-btn-active': apiMode === 'component' }"
+            @click="apiMode = 'component'"
+          >Component</button>
+          <button
+            class="mode-btn"
+            :class="{ 'mode-btn-active': apiMode === 'composable' }"
+            @click="apiMode = 'composable'"
+          >useSignatureKit</button>
+        </div>
       </div>
       <div class="canvas-wrapper">
         <SignatureCanvas
+          v-if="apiMode === 'component'"
           ref="sigRef"
           :pen-color="penColor"
           :background-color="backgroundColor"
@@ -50,6 +63,11 @@
           @undo="onUndo"
           @redo="onRedo"
         />
+        <canvas
+          v-show="apiMode === 'composable'"
+          ref="hookCanvasRef"
+          class="sig-canvas"
+        />
         <div v-if="isDisabled" class="disabled-overlay">
           <span>Read-only mode</span>
         </div>
@@ -67,6 +85,22 @@
 
     <!-- Right: Settings panel -->
     <aside class="sidebar">
+      <!-- Composable Info (only in hook mode) -->
+      <details v-if="apiMode === 'composable'" class="panel-collapsible" open>
+        <summary class="panel-summary">
+          <h3 class="panel-title">Composable Info</h3>
+          <span class="panel-arrow">&#9662;</span>
+        </summary>
+        <div class="panel-body">
+          <div class="hook-info">
+            <code>useSignatureKit(options)</code>{'\n'}
+            Returns: canvasRef, canUndo, canRedo, isEmpty, clear, reset,{'\n'}
+            undo, redo, toDataURL, toBlob, toFile, toSVG, fromDataURL,{'\n'}
+            fromFile, toData, fromData, addWatermark, clearWatermark, trim, getKit, getCanvas
+          </div>
+        </div>
+      </details>
+
       <!-- Pen & Background -->
       <details class="panel-collapsible" open>
         <summary class="panel-summary">
@@ -316,9 +350,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { SignatureCanvas } from '@tinyforged/signature-kit-vue'
+import { useSignatureKit } from '@tinyforged/signature-kit-vue'
 
+// API mode switching
+const apiMode = ref<'component' | 'composable'>('component')
+
+// Component ref
 const sigRef = ref<InstanceType<typeof SignatureCanvas> | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
@@ -341,11 +380,60 @@ const scaleOnResize = ref(true)
 // UI state
 const isDisabled = ref(false)
 const previewUrl = ref('')
-const canUndo = ref(false)
-const canRedo = ref(false)
+const canUndoState = ref(false)
+const canRedoState = ref(false)
 const saveCallbackUrl = ref('')
 const dataInfo = ref('')
 const kitInfo = ref('')
+
+// --- useSignatureKit composable ---
+const {
+  canvasRef: hookCanvasRef,
+  canUndo: hookCanUndo,
+  canRedo: hookCanRedo,
+  isEmpty: hookIsEmpty,
+  clear: hookClear,
+  reset: hookReset,
+  undo: hookUndo,
+  redo: hookRedo,
+  toDataURL: hookToDataURL,
+  toBlob: hookToBlob,
+  toFile: hookToFile,
+  toSVG: hookToSVG,
+  fromDataURL: hookFromDataURL,
+  fromFile: hookFromFile,
+  toData: hookToData,
+  fromData: hookFromData,
+  addWatermark: hookAddWatermark,
+  clearWatermark: hookClearWatermark,
+  trim: hookTrim,
+  getKit: hookGetKit,
+  getCanvas: hookGetCanvas,
+} = useSignatureKit({
+  penColor,
+  backgroundColor,
+  minWidth,
+  maxWidth,
+  dotSize,
+  minDistance,
+  velocityFilterWeight,
+  throttle,
+  clearOnResize,
+  scaleOnResize,
+  disabled: isDisabled,
+  onBegin: () => updateCanStates(),
+  onEnd: () => updateCanStates(),
+  onUndo: () => updateCanStates(),
+  onRedo: () => updateCanStates(),
+})
+
+// Sync composable reactive state for display
+const activeCanUndo = computed(() =>
+  apiMode.value === 'composable' ? hookCanUndo.value : canUndoState.value,
+)
+const activeCanRedo = computed(() =>
+  apiMode.value === 'composable' ? hookCanRedo.value : canRedoState.value,
+)
 
 // Watermark
 const wm = reactive({
@@ -374,7 +462,9 @@ function hexToRgba(hex: string, alpha: number): string {
 }
 
 function handleSave(type: string) {
-  const url = sigRef.value?.save(type)
+  const url = apiMode.value === 'composable'
+    ? hookToDataURL(type)
+    : sigRef.value?.save(type)
   if (url) {
     previewUrl.value = url
     const a = document.createElement('a')
@@ -385,8 +475,11 @@ function handleSave(type: string) {
 }
 
 function handleSaveBlob() {
-  sigRef.value?.toBlob('image/png').then((blob) => {
-    const url = URL.createObjectURL(blob)
+  const blob = apiMode.value === 'composable'
+    ? hookToBlob('image/png')
+    : sigRef.value?.toBlob('image/png')
+  blob.then((b) => {
+    const url = URL.createObjectURL(b)
     previewUrl.value = url
     const a = document.createElement('a')
     a.href = url
@@ -396,18 +489,23 @@ function handleSaveBlob() {
 }
 
 function handleSaveFile() {
-  sigRef.value?.toFile('signature.png', 'image/png').then((file) => {
-    const url = URL.createObjectURL(file)
+  const file = apiMode.value === 'composable'
+    ? hookToFile('signature.png', 'image/png')
+    : sigRef.value?.toFile('signature.png', 'image/png')
+  file.then((f) => {
+    const url = URL.createObjectURL(f)
     previewUrl.value = url
     const a = document.createElement('a')
     a.href = url
-    a.download = file.name
+    a.download = f.name
     a.click()
   })
 }
 
 function handleSaveSVG() {
-  const svg = sigRef.value?.toSVG()
+  const svg = apiMode.value === 'composable'
+    ? hookToSVG()
+    : sigRef.value?.toSVG()
   if (svg) {
     const blob = new Blob([svg], { type: 'image/svg+xml' })
     previewUrl.value = URL.createObjectURL(blob)
@@ -420,36 +518,38 @@ function handleSaveSVG() {
 }
 
 function handleClear() {
-  sigRef.value?.clear()
+  apiMode.value === 'composable' ? hookClear() : sigRef.value?.clear()
   previewUrl.value = ''
   updateCanStates()
 }
 
 function handleReset() {
-  sigRef.value?.reset()
+  apiMode.value === 'composable' ? hookReset() : sigRef.value?.reset()
   previewUrl.value = ''
   updateCanStates()
 }
 
 function handleUndo() {
-  sigRef.value?.undo()
+  apiMode.value === 'composable' ? hookUndo() : sigRef.value?.undo()
   updateCanStates()
 }
 
 function handleRedo() {
-  sigRef.value?.redo()
+  apiMode.value === 'composable' ? hookRedo() : sigRef.value?.redo()
   updateCanStates()
 }
 
 function handleTrim() {
-  const result = sigRef.value?.trim({ padding: 10 })
+  const result = apiMode.value === 'composable'
+    ? hookTrim({ padding: 10 })
+    : sigRef.value?.trim({ padding: 10 })
   if (result) {
     previewUrl.value = result.dataUrl
   }
 }
 
 function handleWatermark() {
-  sigRef.value?.addWatermark({
+  const opts = {
     text: wm.text,
     fontSize: wm.fontSize,
     fontFamily: wm.fontFamily,
@@ -466,11 +566,16 @@ function handleWatermark() {
     lineHeight: wm.lineHeight,
     align: wm.align,
     baseline: wm.baseline,
-  })
+  }
+  apiMode.value === 'composable'
+    ? hookAddWatermark(opts)
+    : sigRef.value?.addWatermark(opts)
 }
 
 function handleClearWatermark() {
-  sigRef.value?.clearWatermark()
+  apiMode.value === 'composable'
+    ? hookClearWatermark()
+    : sigRef.value?.clearWatermark()
 }
 
 function handleLoadFile() {
@@ -481,20 +586,29 @@ function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
-  sigRef.value?.fromFile(file).then(() => updateCanStates())
+  const promise = apiMode.value === 'composable'
+    ? hookFromFile(file)
+    : sigRef.value?.fromFile(file)
+  promise?.then(() => updateCanStates())
   input.value = ''
 }
 
 function handleShowData() {
-  const data = sigRef.value?.toData()
+  const data = apiMode.value === 'composable'
+    ? hookToData()
+    : sigRef.value?.toData()
   const strokes = data?.length ?? 0
   const points = data?.reduce((acc, g) => acc + g.points.length, 0) ?? 0
   dataInfo.value = `${strokes} stroke(s), ${points} point(s)`
 }
 
 function handleShowKitInfo() {
-  const kit = sigRef.value?.getKit()
-  const canvas = sigRef.value?.getCanvas()
+  const kit = apiMode.value === 'composable'
+    ? hookGetKit()
+    : sigRef.value?.getKit()
+  const canvas = apiMode.value === 'composable'
+    ? hookGetCanvas()
+    : sigRef.value?.getCanvas()
   if (kit && canvas) {
     kitInfo.value = `canvas: ${canvas.width}x${canvas.height}, disabled: ${kit.disabled}, watermark: ${kit.watermark ? 'yes' : 'no'}`
   }
@@ -509,8 +623,8 @@ function onSave(url: string) {
 }
 
 function updateCanStates() {
-  canUndo.value = sigRef.value?.canUndo() ?? false
-  canRedo.value = sigRef.value?.canRedo() ?? false
+  canUndoState.value = sigRef.value?.canUndo() ?? false
+  canRedoState.value = sigRef.value?.canRedo() ?? false
 }
 </script>
 
@@ -814,6 +928,49 @@ textarea:focus {
   margin-top: 0.25rem;
 }
 
+/* Mode switch */
+.mode-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+  background: #f0f0f0;
+  padding: 0.2rem;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.mode-btn {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: white;
+  color: #555;
+  cursor: pointer;
+}
+
+.mode-btn-active {
+  background: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
+}
+
+/* Hook/composable info */
+.hook-info {
+  font-size: 0.65rem;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  color: #888;
+  background: #f8f9fa;
+  padding: 0.3rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #e8e8e8;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -878,7 +1035,7 @@ textarea:focus {
 
 .btn.active {
   background: #fef3e0;
-  border-color: '#f5a623';
+  border-color: #f5a623;
   color: #e67e00;
 }
 

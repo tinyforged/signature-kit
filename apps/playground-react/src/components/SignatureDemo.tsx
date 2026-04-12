@@ -1,10 +1,11 @@
 import { useRef, useState, useCallback } from 'react'
 import { SignatureCanvas } from '@tinyforged/signature-kit-react'
-import type { SignatureCanvasRef, WatermarkOptions } from '@tinyforged/signature-kit-react'
+import { useSignatureKit } from '@tinyforged/signature-kit-react'
+import type { WatermarkOptions } from '@tinyforged/signature-kit-react'
 
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
+  const const g = parseInt(hex.slice(3, 5), 16)
   const b = parseInt(hex.slice(5, 7), 16)
   return `rgba(${r},${g},${b},${alpha})`
 }
@@ -50,11 +51,16 @@ const css = {
   checkboxLabel: { fontSize: '0.72rem', fontWeight: 500, color: '#555', cursor: 'pointer' },
   infoBox: { fontSize: '0.68rem', fontFamily: "'SF Mono','Fira Code','Consolas',monospace", color: '#666', background: '#f8f9fa', padding: '0.3rem 0.4rem', borderRadius: 4, border: '1px solid #eee', wordBreak: 'break-all' as const, marginTop: '0.25rem' },
   fileInput: { display: 'none' },
+  modeSwitch: { display: 'flex', alignItems: 'center', gap: '0.3rem', marginLeft: 'auto', background: '#f0f0f0', padding: '0.2rem', borderRadius: 6, border: '1px solid #e0e0e0' },
+  modeBtn: { padding: '0.15rem 0.5rem', fontSize: '0.72rem', fontWeight: 600, border: '1px solid #e0e0e0', borderRadius: 4, background: 'white', color: '#555', cursor: 'pointer' },
+  modeBtnActive: { background: '#1a73e8', color: 'white', borderColor: '#1a73e8' },
+  hookInfo: { fontSize: '0.65rem', fontFamily: "'SF Mono','Fira Code','Consolas',monospace", color: '#888', background: '#f8f9fa', padding: '0.3rem 0.4rem', borderRadius: 4, border: '1px solid #e8e8e8', marginTop: '0.25rem', lineHeight: '1.4' },
 }
 
-export default function SignatureDemo() {
+function SignatureDemo() {
   const sigRef = useRef<SignatureCanvasRef>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [apiMode, setApiMode] = useState<'component' | 'hook'>('component')
 
   // Pen & Background
   const [penColor, setPenColor] = useState('#000000')
@@ -109,8 +115,11 @@ export default function SignatureDemo() {
     setCanRedoState(sigRef.current?.canRedo() ?? false)
   }, [])
 
+  // --- Shared handlers (used by both modes) ---
   function handleSave(type: string) {
-    const url = sigRef.current?.toDataURL(type)
+    const url = apiMode === 'hook'
+      ? hookToDataURL(type)
+      : sigRef.current?.toDataURL(type)
     if (url) {
       setPreviewUrl(url)
       const a = document.createElement('a')
@@ -121,8 +130,11 @@ export default function SignatureDemo() {
   }
 
   function handleSaveBlob() {
-    sigRef.current?.toBlob('image/png').then((blob) => {
-      const url = URL.createObjectURL(blob)
+    const blob = apiMode === 'hook'
+      ? hookToBlob()
+      : sigRef.current?.toBlob('image/png')
+    blob.then((b) => {
+      const url = URL.createObjectURL(b)
       setPreviewUrl(url)
       const a = document.createElement('a')
       a.href = url
@@ -131,19 +143,10 @@ export default function SignatureDemo() {
     })
   }
 
-  function handleSaveFile() {
-    sigRef.current?.toFile('signature.png', 'image/png').then((file) => {
-      const url = URL.createObjectURL(file)
-      setPreviewUrl(url)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = file.name
-      a.click()
-    })
-  }
-
   function handleSaveSVG() {
-    const svg = sigRef.current?.toSVG()
+    const svg = apiMode === 'hook'
+      ? hookToSVG()
+      : sigRef.current?.toSVG()
     if (svg) {
       const blob = new Blob([svg], { type: 'image/svg+xml' })
       const url = URL.createObjectURL(blob)
@@ -156,33 +159,35 @@ export default function SignatureDemo() {
   }
 
   function handleClear() {
-    sigRef.current?.clear()
+    apiMode === 'hook' ? hookClear() : sigRef.current?.clear()
     setPreviewUrl('')
     updateCanStates()
   }
 
   function handleReset() {
-    sigRef.current?.reset()
+    apiMode === 'hook' ? hookReset() : sigRef.current?.reset()
     setPreviewUrl('')
     updateCanStates()
   }
 
   function handleClearWatermark() {
-    sigRef.current?.clearWatermark()
+    apiMode === 'hook' ? hookClearWatermark() : sigRef.current?.clearWatermark()
   }
 
   function handleUndo() {
-    sigRef.current?.undo()
+    apiMode === 'hook' ? hookUndo() : sigRef.current?.undo()
     updateCanStates()
   }
 
   function handleRedo() {
-    sigRef.current?.redo()
+    apiMode === 'hook' ? hookRedo() : sigRef.current?.redo()
     updateCanStates()
   }
 
   function handleTrim() {
-    const result = sigRef.current?.trim({ padding: 10 })
+    const result = apiMode === 'hook'
+      ? hookTrim({ padding: 10 })
+      : sigRef.current?.trim({ padding: 10 })
     if (result) setPreviewUrl(result.dataUrl)
   }
 
@@ -194,7 +199,7 @@ export default function SignatureDemo() {
       opacity: wm.opacity, lineWidth: wm.lineWidth, x: wm.x, y: wm.y,
       rotation: wm.rotation, lineHeight: wm.lineHeight, align: wm.align, baseline: wm.baseline,
     }
-    sigRef.current?.addWatermark(opts)
+    apiMode === 'hook' ? hookAddWatermark(opts) : sigRef.current?.addWatermark(opts)
   }
 
   function handleLoadFile() {
@@ -204,26 +209,81 @@ export default function SignatureDemo() {
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    sigRef.current?.fromFile(file).then(() => updateCanStates())
+    (apiMode === 'hook' ? hookFromFile(file) : sigRef.current?.fromFile(file)).then(() => updateCanStates())
     e.target.value = ''
   }
 
   function handleShowData() {
-    const data = sigRef.current?.toData()
+    const data = apiMode === 'hook' ? hookToData() : sigRef.current?.toData()
     setDataInfo(`${data?.length ?? 0} stroke(s), ${data?.reduce((acc, g) => acc + g.points.length, 0) ?? 0} point(s)`)
   }
 
   function handleShowKitInfo() {
-    const kit = sigRef.current?.getKit()
-    const canvas = sigRef.current?.getCanvas()
+    const kit = apiMode === 'hook' ? hookGetKit() : sigRef.current?.getKit()
+    const canvas = apiMode === 'hook' ? hookGetCanvas() : sigRef.current?.getCanvas()
     if (kit && canvas) {
       setKitInfo(`canvas: ${canvas.width}x${canvas.height}, disabled: ${kit.disabled}, watermark: ${kit.watermark ? 'yes' : 'no'}`)
     }
   }
 
+  // --- useSignatureKit hook ---
+  const {
+    canvasRef: hookCanvasRef,
+    canUndo: hookCanUndo,
+    canRedo: hookCanRedo,
+    isEmpty: hookIsEmpty,
+    clear: hookClear,
+    reset: hookReset,
+    undo: hookUndo,
+    redo: hookRedo,
+    toDataURL: hookToDataURL,
+    toBlob: hookToBlob,
+    toFile: hookToFile,
+    toSVG: hookToSVG,
+    fromDataURL: hookFromDataURL,
+    fromFile: hookFromFile,
+    toData: hookToData,
+    fromData: hookFromData,
+    addWatermark: hookAddWatermark,
+    clearWatermark: hookClearWatermark,
+    trim: hookTrim,
+    getKit: hookGetKit,
+  } = useSignatureKit({
+    penColor,
+    backgroundColor,
+    minWidth,
+    maxWidth,
+    dotSize,
+    minDistance,
+    velocityFilterWeight,
+    throttle,
+    clearOnResize,
+    scaleOnResize,
+    disabled: isDisabled,
+    onBegin: () => updateCanStates(),
+    onEnd: () => updateCanStates(),
+    onUndo: () => updateCanStates(),
+    onRedo: () => updateCanStates(),
+    onSave: (url) => setSaveCallbackUrl(url.slice(0, 60) + '...'),
+  })
+
+  const hookGetCanvas = useCallback(() => {
+    return hookCanvasRef.current ?? null
+  }, [hookCanvasRef])
+
+  // Sync hook state for display
+  useEffect(() => {
+    if (apiMode !== 'hook') return
+    setCanUndoState(hookCanUndo)
+    setCanRedoState(hookCanRedo)
+  }, [apiMode, hookCanUndo, hookCanRedo])
+
+  const activeCanvasRef = apiMode === 'hook' ? hookCanvasRef : sigRef
+  const activeCanUndo = apiMode === 'hook' ? hookCanUndo : canUndoState
+  const activeCanRedo = apiMode === 'hook' ? hookCanRedo : canRedoState
+
   return (
     <div style={css.demo}>
-      {/* Hidden file input */}
       <input ref={fileInputRef} type="file" accept="image/*" style={css.fileInput} onChange={onFileChange} />
 
       {/* Left: Canvas + Preview */}
@@ -234,12 +294,11 @@ export default function SignatureDemo() {
             <button style={css.btnPrimary} onClick={() => handleSave('image/jpeg')}>JPEG</button>
             <button style={css.btnPrimary} onClick={handleSaveSVG}>SVG</button>
             <button style={css.btnOutline} onClick={handleSaveBlob}>Blob</button>
-            <button style={css.btnOutline} onClick={handleSaveFile}>File</button>
             <button style={css.btnOutline} onClick={handleTrim}>&#9986; Trim</button>
           </div>
           <div style={{ ...css.toolbarGroup, ...css.toolbarSep }}>
-            <button style={{ ...css.btn, ...(canUndoState ? {} : css.btnDisabled) }} disabled={!canUndoState} onClick={handleUndo}>&#8617; Undo</button>
-            <button style={{ ...css.btn, ...(canRedoState ? {} : css.btnDisabled) }} disabled={!canRedoState} onClick={handleRedo}>&#8618; Redo</button>
+            <button style={{ ...css.btn, ...(activeCanUndo ? {} : css.btnDisabled) }} disabled={!activeCanUndo} onClick={handleUndo}>&#8617; Undo</button>
+            <button style={{ ...css.btn, ...(activeCanRedo ? {} : css.btnDisabled) }} disabled={!activeCanRedo} onClick={handleRedo}>&#8618; Redo</button>
             <button style={css.btn} onClick={handleClear}>&#128465; Clear</button>
             <button style={{ ...css.btn, ...css.btnDanger }} onClick={handleReset}>&#128260; Reset</button>
           </div>
@@ -249,27 +308,41 @@ export default function SignatureDemo() {
               {isDisabled ? '\u270F Edit' : '\uD83D\uDD12 Lock'}
             </button>
           </div>
+          <div style={css.modeSwitch}>
+            <button
+              style={{ ...css.modeBtn, ...(apiMode === 'component' ? css.modeBtnActive : {}) }}
+              onClick={() => setApiMode('component')}
+            >Component</button>
+            <button
+              style={{ ...css.modeBtn, ...(apiMode === 'hook' ? css.modeBtnActive : {}) }}
+              onClick={() => setApiMode('hook')}
+            >useSignatureKit</button>
+          </div>
         </div>
         <div style={css.canvasWrapper}>
-          <SignatureCanvas
-            ref={sigRef}
-            penColor={penColor}
-            backgroundColor={backgroundColor}
-            minWidth={minWidth}
-            maxWidth={maxWidth}
-            dotSize={dotSize}
-            minDistance={minDistance}
-            velocityFilterWeight={velocityFilterWeight}
-            throttle={throttle}
-            clearOnResize={clearOnResize}
-            scaleOnResize={scaleOnResize}
-            disabled={isDisabled}
-            onBegin={() => updateCanStates()}
-            onEnd={() => updateCanStates()}
-            onUndo={() => updateCanStates()}
-            onRedo={() => updateCanStates()}
-            onSave={(url) => setSaveCallbackUrl(url.slice(0, 60) + '...')}
-          />
+          {apiMode === 'component' ? (
+            <SignatureCanvas
+              ref={sigRef}
+              penColor={penColor}
+              backgroundColor={backgroundColor}
+              minWidth={minWidth}
+              maxWidth={maxWidth}
+              dotSize={dotSize}
+              minDistance={minDistance}
+              velocityFilterWeight={velocityFilterWeight}
+              throttle={throttle}
+              clearOnResize={clearOnResize}
+              scaleOnResize={scaleOnResize}
+              disabled={isDisabled}
+              onBegin={() => updateCanStates()}
+              onEnd={() => updateCanStates()}
+              onUndo={() => updateCanStates()}
+              onRedo={() => updateCanStates()}
+              onSave={(url) => setSaveCallbackUrl(url.slice(0, 60) + '...')}
+            />
+          ) : (
+            <canvas ref={hookCanvasRef} style={{ width: '100%', height: '100%' }} />
+          )}
           {isDisabled && <div style={css.disabledOverlay}><span>Read-only mode</span></div>}
         </div>
         {previewUrl && (
@@ -287,7 +360,23 @@ export default function SignatureDemo() {
 
       {/* Right: Settings panel */}
       <aside style={css.sidebar}>
-        {/* Pen & Background */}
+        {apiMode === 'hook' && (
+          <details open style={css.panelCollapsible}>
+            <summary style={css.panelSummary}>
+              <h3 style={css.panelTitle}>Hook Info</h3>
+              <span style={css.panelArrow}>{'\u25BE'}</span>
+            </summary>
+            <div style={css.panelBody}>
+              <div style={css.hookInfo}>
+                <code>useSignatureKit(options)</code>{'\n'}
+                {'Returns: canvasRef, canUndo, canRedo, isEmpty, clear, reset,\n'}
+                undo, redo, toDataURL, toBlob, toFile, toSVG, fromDataURL,\n'}
+                fromFile, toData, fromData, addWatermark, clearWatermark, trim, getKit
+              </div>
+            </div>
+          </details>
+        )}
+
         <details open style={css.panelCollapsible}>
           <summary style={css.panelSummary}>
             <h3 style={css.panelTitle}>Pen &amp; Background</h3>
@@ -325,7 +414,6 @@ export default function SignatureDemo() {
           </div>
         </details>
 
-        {/* Advanced Pen */}
         <details style={css.panelCollapsible}>
           <summary style={css.panelSummary}>
             <h3 style={css.panelTitle}>Advanced Pen</h3>
@@ -363,7 +451,6 @@ export default function SignatureDemo() {
           </div>
         </details>
 
-        {/* Resize Behavior */}
         <details style={css.panelCollapsible}>
           <summary style={css.panelSummary}>
             <h3 style={css.panelTitle}>Resize Behavior</h3>
@@ -384,7 +471,6 @@ export default function SignatureDemo() {
           </div>
         </details>
 
-        {/* Watermark */}
         <details open style={css.panelCollapsible}>
           <summary style={css.panelSummary}>
             <h3 style={css.panelTitle}>Watermark</h3>
@@ -514,7 +600,6 @@ export default function SignatureDemo() {
           </div>
         </details>
 
-        {/* Data & Info */}
         <details style={css.panelCollapsible}>
           <summary style={css.panelSummary}>
             <h3 style={css.panelTitle}>Data &amp; Info</h3>
@@ -537,3 +622,5 @@ export default function SignatureDemo() {
     </div>
   )
 }
+
+export default function SignatureDemo
