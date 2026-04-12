@@ -97,6 +97,15 @@ const SignatureCanvas = forwardRef<SignatureCanvasRef, SignatureCanvasProps>(
       kitRef.current.updateOptions(buildOptions())
     }, [buildOptions])
 
+    useEffect(() => {
+      if (!kitRef.current) return
+      if (props.watermark) {
+        kitRef.current.addWatermark(props.watermark)
+      } else {
+        kitRef.current.clearWatermark()
+      }
+    }, [props.watermark])
+
     useImperativeHandle(ref, () => ({
       isEmpty: () => kitRef.current?.isEmpty() ?? true,
       clear: () => kitRef.current?.clear(),
