@@ -89,6 +89,8 @@ watch(
     props.dotSize,
     props.velocityFilterWeight,
     props.throttle,
+    props.clearOnResize,
+    props.scaleOnResize,
   ],
   () => {
     if (kit) kit.updateOptions(buildOptions())
