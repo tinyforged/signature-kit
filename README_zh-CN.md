@@ -327,6 +327,28 @@ sigRef.value?.getKit(): SignatureKit | null
 sigRef.value?.getCanvas(): HTMLCanvasElement | null
 ```
 
+### useSignatureKit 组合式函数
+
+如需更多控制，可使用 `useSignatureKit` 组合式函数直接管理你自己的 `<canvas>` 元素：
+
+```vue
+<template>
+  <canvas ref="canvasRef" />
+  <button @click="undo" :disabled="!canUndo">Undo</button>
+</template>
+
+<script setup lang="ts">
+import { useSignatureKit } from '@tinyforged/signature-kit-vue'
+
+const { canvasRef, canUndo, canRedo, undo, redo, clear, reset, ... } = useSignatureKit({
+  penColor: '#000',
+  backgroundColor: '#fff',
+})
+</script>
+```
+
+组合式函数返回一个 `canvasRef` 绑定到你的 `<canvas>` 元素，响应式 `canUndo`/`canRedo` 状态，以及所有 SignatureKit 方法作为普通函数（无需 `ref.value`）。
+
 ---
 
 ## React
@@ -419,6 +441,31 @@ sigRef.current?.trim(options?): TrimResult | null
 sigRef.current?.getKit(): SignatureKit | null
 sigRef.current?.getCanvas(): HTMLCanvasElement | null
 ```
+
+### useSignatureKit Hook
+
+如需更多控制，可使用 `useSignatureKit` Hook 直接管理你自己的 `<canvas>` 元素：
+
+```tsx
+import { useSignatureKit } from '@tinyforged/signature-kit-react'
+
+function App() {
+  const { canvasRef, canUndo, canRedo, undo, redo, clear, reset, ... } = useSignatureKit({
+    penColor: '#000',
+    backgroundColor: '#fff',
+  })
+
+  return (
+    <div>
+      <canvas ref={canvasRef} />
+      <button onClick={undo} disabled={!canUndo}>Undo</button>
+      <button onClick={clear}>Clear</button>
+    </div>
+  )
+}
+```
+
+Hook 返回一个 `canvasRef` 绑定到你的 `<canvas>` 元素，响应式 `canUndo`/`canRedo` 状态，以及所有 SignatureKit 方法作为普通函数（无需 `ref.current`）。
 
 ---
 

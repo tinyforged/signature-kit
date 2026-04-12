@@ -327,6 +327,28 @@ sigRef.value?.getKit(): SignatureKit | null
 sigRef.value?.getCanvas(): HTMLCanvasElement | null
 ```
 
+### useSignatureKit Composable
+
+For more control, use the `useSignatureKit` composable to manage your own `<canvas>` element directly:
+
+```vue
+<template>
+  <canvas ref="canvasRef" />
+  <button @click="undo" :disabled="!canUndo">Undo</button>
+</template>
+
+<script setup lang="ts">
+import { useSignatureKit } from '@tinyforged/signature-kit-vue'
+
+const { canvasRef, canUndo, canRedo, undo, redo, clear, reset, ... } = useSignatureKit({
+  penColor: '#000',
+  backgroundColor: '#fff',
+})
+</script>
+```
+
+The composable returns a `canvasRef` to bind to your `<canvas>` element, reactive `canUndo`/`canRedo` state, and all SignatureKit methods as plain functions (no `ref.value` needed).
+
 ---
 
 ## React
@@ -419,6 +441,31 @@ sigRef.current?.trim(options?): TrimResult | null
 sigRef.current?.getKit(): SignatureKit | null
 sigRef.current?.getCanvas(): HTMLCanvasElement | null
 ```
+
+### useSignatureKit Hook
+
+For more control, use the `useSignatureKit` hook to manage your own `<canvas>` element directly:
+
+```tsx
+import { useSignatureKit } from '@tinyforged/signature-kit-react'
+
+function App() {
+  const { canvasRef, canUndo, canRedo, undo, redo, clear, reset, ... } = useSignatureKit({
+    penColor: '#000',
+    backgroundColor: '#fff',
+  })
+
+  return (
+    <div>
+      <canvas ref={canvasRef} />
+      <button onClick={undo} disabled={!canUndo}>Undo</button>
+      <button onClick={clear}>Clear</button>
+    </div>
+  )
+}
+```
+
+The hook returns a `canvasRef` to attach to your `<canvas>` element, reactive `canUndo`/`canRedo` state, and all SignatureKit methods as plain functions (no `ref.current` needed).
 
 ---
 

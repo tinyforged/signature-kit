@@ -12,6 +12,8 @@ npm install @tinyforged/signature-kit-react
 
 ## 快速开始
 
+### 组件方式
+
 ```tsx
 import { useRef } from 'react'
 import { SignatureCanvas } from '@tinyforged/signature-kit-react'
@@ -37,9 +39,34 @@ function App() {
 }
 ```
 
+### Hook 方式
+
+如需更多控制，可使用 `useSignatureKit` Hook 直接管理你自己的 `<canvas>` 元素：
+
+```tsx
+import { useSignatureKit } from '@tinyforged/signature-kit-react'
+
+function App() {
+  const { canvasRef, canUndo, canRedo, undo, redo, clear, reset, ... } = useSignatureKit({
+    penColor: '#000',
+    backgroundColor: '#fff',
+  })
+
+  return (
+    <div>
+      <canvas ref={canvasRef} />
+      <button onClick={undo} disabled={!canUndo}>Undo</button>
+      <button onClick={clear}>Clear</button>
+    </div>
+  )
+}
+```
+
+Hook 返回一个 `canvasRef` 绑定到你的 `<canvas>` 元素，响应式 `canUndo`/`canRedo` 状态，以及所有 SignatureKit 方法作为普通函数（无需 `ref.current`）。
+
 ## API
 
-查看[完整文档](https://github.com/TinyForged/signature-kit#react)获取属性、事件和 ref 方法的说明。
+查看[完整文档](https://github.com/TinyForged/signature-kit#react)获取属性、事件、ref 方法和 Hook 用法的说明。
 
 ## 许可证
 
