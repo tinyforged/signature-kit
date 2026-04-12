@@ -37,6 +37,7 @@ export class SignatureKit {
   private _resizeObserver: ResizeObserver | null = null
   private _lastSize = { width: 0, height: 0 }
   private _colorCache = new Map<string, [number, number, number, number] | null>()
+  private _sigPadListeners: Array<{ event: string; handler: EventListener }> = []
 
   constructor(canvas: HTMLCanvasElement, options: SignatureKitOptions = {}) {
     this._canvas = canvas
@@ -52,14 +53,14 @@ export class SignatureKit {
     }
 
     // Forward signature_pad native events
-    this._sigPad.addEventListener('beginStroke', (e: Event) => {
+    const onBeginStroke = (e: Event) => {
       const detail = (e as CustomEvent).detail
       this._emit('beginStroke', {
         type: 'beginStroke',
         originalEvent: detail?.event,
       })
-    })
-    this._sigPad.addEventListener('endStroke', (e: Event) => {
+    }
+    const onEndStroke = (e: Event) => {
       const detail = (e as CustomEvent).detail
       this._emit('endStroke', {
         type: 'endStroke',
@@ -67,13 +68,23 @@ export class SignatureKit {
       })
       // New stroke invalidates redo stack
       this._redoStack.length = 0
-    })
-    this._sigPad.addEventListener('beforeUpdateStroke', () => {
+    }
+    const onBeforeUpdateStroke = () => {
       this._emit('beforeUpdateStroke', { type: 'beforeUpdateStroke' })
-    })
-    this._sigPad.addEventListener('afterUpdateStroke', () => {
+    }
+    const onAfterUpdateStroke = () => {
       this._emit('afterUpdateStroke', { type: 'afterUpdateStroke' })
-    })
+    }
+
+    this._sigPadListeners = [
+      { event: 'beginStroke', handler: onBeginStroke },
+      { event: 'endStroke', handler: onEndStroke },
+      { event: 'beforeUpdateStroke', handler: onBeforeUpdateStroke },
+      { event: 'afterUpdateStroke', handler: onAfterUpdateStroke },
+    ]
+    for (const { event, handler } of this._sigPadListeners) {
+      this._sigPad.addEventListener(event, handler)
+    }
 
     // Disabled on init
     if (options.disabled) {
@@ -184,6 +195,7 @@ export class SignatureKit {
     return this._sigPad.fromDataURL(url, options).then(() => {
       this._undoStack.length = 0
       this._redoStack.length = 0
+      this._applyWatermark()
     })
   }
 
@@ -200,6 +212,7 @@ export class SignatureKit {
             .then(() => {
               this._undoStack.length = 0
               this._redoStack.length = 0
+              this._applyWatermark()
               resolve()
             })
             .catch(reject)
@@ -432,8 +445,9 @@ export class SignatureKit {
         // Restore without scaling
         this._sigPad.fromData(data, { clear: false })
       }
-    this._applyWatermark()
     }
+
+    this._applyWatermark()
 
     this._lastSize = { width: newWidth, height: newHeight }
 
@@ -460,6 +474,10 @@ export class SignatureKit {
 
   destroy(): void {
     this._resizeObserver?.disconnect()
+    for (const { event, handler } of this._sigPadListeners) {
+      this._sigPad.removeEventListener(event, handler)
+    }
+    this._sigPadListeners.length = 0
     this._sigPad.off()
     this._undoStack.length = 0
     this._redoStack.length = 0
