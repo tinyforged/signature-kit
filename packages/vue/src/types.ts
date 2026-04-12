@@ -1,4 +1,13 @@
-import type { WatermarkOptions } from '@tinyforged/signature-kit'
+import type {
+  WatermarkOptions,
+  TrimOptions,
+  TrimResult,
+  PointGroup,
+} from '@tinyforged/signature-kit'
+import type { Ref } from 'vue'
+
+/** Accepts a plain value or a Vue ref */
+type MaybeRef<T> = T | Ref<T>
 
 export interface SignatureCanvasProps {
   /** Pen color. Default: 'rgb(0, 0, 0)' */
@@ -48,4 +57,61 @@ export interface SignatureCanvasEmits {
   (e: 'undo'): void
   (e: 'redo'): void
   (e: 'save', dataUrl: string): void
+}
+
+// --- useSignatureKit composable types ---
+
+export interface UseSignatureKitOptions {
+  penColor?: MaybeRef<string | undefined>
+  backgroundColor?: MaybeRef<string | undefined>
+  minWidth?: MaybeRef<number | undefined>
+  maxWidth?: MaybeRef<number | undefined>
+  minDistance?: MaybeRef<number | undefined>
+  dotSize?: MaybeRef<number | undefined>
+  velocityFilterWeight?: MaybeRef<number | undefined>
+  throttle?: MaybeRef<number | undefined>
+  clearOnResize?: MaybeRef<boolean | undefined>
+  scaleOnResize?: MaybeRef<boolean | undefined>
+  disabled?: MaybeRef<boolean | undefined>
+  /** Callback when a stroke begins */
+  onBegin?: (event: MouseEvent | TouchEvent | PointerEvent) => void
+  /** Callback when a stroke ends */
+  onEnd?: (event: MouseEvent | TouchEvent | PointerEvent) => void
+  /** Callback when canvas is cleared */
+  onClear?: () => void
+  /** Callback when undo is performed */
+  onUndo?: () => void
+  /** Callback when redo is performed */
+  onRedo?: () => void
+  /** Load a signature from a data URL on mount */
+  defaultUrl?: MaybeRef<string | undefined>
+  /** Watermark options (applied on mount and when changed) */
+  watermark?: MaybeRef<WatermarkOptions | undefined>
+}
+
+export interface UseSignatureKitReturn {
+  /** Template ref to attach to your own <canvas> element */
+  canvasRef: Ref<HTMLCanvasElement | null>
+  /** Whether undo is available (reactive) */
+  canUndo: Readonly<Ref<boolean>>
+  /** Whether redo is available (reactive) */
+  canRedo: Readonly<Ref<boolean>>
+  isEmpty: () => boolean
+  clear: () => void
+  reset: () => void
+  undo: () => void
+  redo: () => void
+  toDataURL: (type?: string, encoderOptions?: number) => string
+  toBlob: (type?: string, quality?: number) => Promise<Blob>
+  toFile: (filename?: string, type?: string, quality?: number) => Promise<File>
+  toSVG: () => string
+  fromDataURL: (url: string) => Promise<void>
+  fromFile: (file: File | Blob) => Promise<void>
+  toData: () => PointGroup[]
+  fromData: (data: PointGroup[]) => void
+  addWatermark: (options: WatermarkOptions) => void
+  clearWatermark: () => void
+  trim: (options?: TrimOptions) => TrimResult | null
+  getKit: () => import('@tinyforged/signature-kit').SignatureKit | null
+  getCanvas: () => HTMLCanvasElement | null
 }

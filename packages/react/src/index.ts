@@ -1,5 +1,6 @@
 export { SignatureCanvas } from './SignatureCanvas'
-export type { SignatureCanvasProps, SignatureCanvasRef } from './types'
+export { useSignatureKit } from './useSignatureKit'
+export type { SignatureCanvasProps, SignatureCanvasRef, UseSignatureKitOptions, UseSignatureKitReturn } from './types'
 
 // Re-export core types for convenience
 export type {

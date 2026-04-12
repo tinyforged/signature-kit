@@ -1,5 +1,6 @@
 export { default as SignatureCanvas } from './SignatureCanvas.vue'
-export type { SignatureCanvasProps, SignatureCanvasEmits } from './types'
+export { useSignatureKit } from './useSignatureKit'
+export type { SignatureCanvasProps, SignatureCanvasEmits, UseSignatureKitOptions, UseSignatureKitReturn } from './types'
 
 // Re-export core types for consumer convenience
 export type {
