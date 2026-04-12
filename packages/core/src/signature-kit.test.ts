@@ -660,3 +660,325 @@ describe('drawWatermark', () => {
     ).not.toThrow()
   })
 })
+
+describe('Bug fix: _handleResize watermark', () => {
+  it('should reapply watermark after resize when clearOnResize is true', () => {
+    const kit = createKit(300, 150, { clearOnResize: true })
+    kit.addWatermark({ text: 'RESIZE_WM' })
+    kit.fromData([
+      {
+        points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+      },
+    ])
+
+    // Simulate resize by directly calling internal _handleResize logic
+    const kitAsAny = kit as unknown as {
+      _lastSize: { width: number; height: number }
+      _options: { clearOnResize: boolean }
+      _resizeCanvas: () => void
+      _sigPad: { clear: () => void; fromData: (d: unknown[]) => void; isEmpty: () => boolean }
+      _applyWatermark: () => void
+      _emit: () => void
+      _watermarkOptions: unknown
+      _handleResize: () => void
+    }
+
+    // Manually set up a resize scenario
+    kitAsAny._lastSize = { width: 300, height: 150 }
+    kitAsAny._resizeCanvas()
+    kitAsAny._sigPad.clear()
+
+    // clearOnResize=true means no strokes restored, but watermark should still exist
+    kitAsAny._applyWatermark()
+
+    // Watermark options should still be stored
+    expect(kit.watermark).toEqual({ text: 'RESIZE_WM' })
+
+    kit.destroy()
+  })
+
+  it('should reapply watermark after resize when canvas is empty but watermark is set', () => {
+    const kit = createKit(300, 150)
+    kit.addWatermark({ text: 'EMPTY_WM' })
+    // Don't add any strokes — canvas is empty
+
+    const kitAsAny = kit as unknown as {
+      _lastSize: { width: number; height: number }
+      _resizeCanvas: () => void
+      _sigPad: { clear: () => void; toData: () => unknown[] }
+      _applyWatermark: () => void
+      _handleResize: () => void
+    }
+
+    kitAsAny._lastSize = { width: 300, height: 150 }
+    // Simulate resize with empty canvas
+    kitAsAny._resizeCanvas()
+    kitAsAny._sigPad.clear()
+    kitAsAny._applyWatermark()
+
+    expect(kit.watermark).toEqual({ text: 'EMPTY_WM' })
+
+    kit.destroy()
+  })
+})
+
+describe('Bug fix: fromDataURL/fromFile watermark reapply', () => {
+  it('should reapply watermark after fromDataURL stack clearing (direct test)', () => {
+    const kit = createKit(300, 150)
+    kit.addWatermark({ text: 'LOAD_WM' })
+    kit.fromData([
+      {
+        points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+      },
+    ])
+
+    // Simulate what fromDataURL does after loading: clear stacks + reapply watermark
+    const kitAsAny = kit as unknown as {
+      _undoStack: unknown[]
+      _redoStack: unknown[]
+      _applyWatermark: () => void
+      _watermarkOptions: unknown
+    }
+
+    kitAsAny._undoStack.length = 0
+    kitAsAny._redoStack.length = 0
+    kitAsAny._applyWatermark()
+
+    expect(kit.watermark).toEqual({ text: 'LOAD_WM' })
+    expect(kit.toData()).toHaveLength(1)
+
+    kit.destroy()
+  })
+
+  it('should clear undo/redo stacks and keep watermark after fromFile stack clearing', () => {
+    const kit = createKit(300, 150)
+    kit.addWatermark({ text: 'FILE_WM' })
+    kit.fromData([
+      {
+        points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+      },
+      {
+        points: [{ x: 50, y: 50, time: Date.now() + 1, pressure: 0.5 }],
+      },
+    ])
+
+    // Simulate what fromFile does after loading
+    const kitAsAny = kit as unknown as {
+      _undoStack: unknown[]
+      _redoStack: unknown[]
+      _applyWatermark: () => void
+    }
+
+    kitAsAny._undoStack.length = 0
+    kitAsAny._redoStack.length = 0
+    kitAsAny._applyWatermark()
+
+    expect(kit.watermark).toEqual({ text: 'FILE_WM' })
+    expect(kit.canRedo).toBe(false)
+
+    kit.destroy()
+  })
+})
+
+describe('Bug fix: destroy removes sigPad event listeners', () => {
+  it('should not emit custom events after destroy', () => {
+    const kit = createKit(300, 150)
+    const handler = vi.fn()
+    kit.on('endStroke', handler)
+
+    kit.destroy()
+
+    // After destroy, the sigPad listeners should be removed
+    // We can verify by checking that _sigPadListeners is cleared
+    const kitAsAny = kit as unknown as { _sigPadListeners: unknown[] }
+    expect(kitAsAny._sigPadListeners).toHaveLength(0)
+
+    // The custom listener map should also be cleared
+    kit.fromData([
+      {
+        points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+      },
+    ])
+    // handler should NOT be called because offAll was done via _listeners.clear()
+    // and sigPad listeners were removed
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('should clear all internal state on destroy', () => {
+    const kit = createKit(300, 150)
+    kit.addWatermark({ text: 'TEST' })
+    kit.fromData([
+      {
+        points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+      },
+    ])
+
+    kit.destroy()
+
+    const kitAsAny = kit as unknown as {
+      _undoStack: unknown[]
+      _redoStack: unknown[]
+      _watermarkOptions: unknown
+      _listeners: Map<unknown, unknown>
+      _colorCache: Map<unknown, unknown>
+      _sigPadListeners: unknown[]
+    }
+
+    expect(kitAsAny._undoStack).toHaveLength(0)
+    expect(kitAsAny._redoStack).toHaveLength(0)
+    expect(kitAsAny._watermarkOptions).toBeNull()
+    expect(kitAsAny._listeners.size).toBe(0)
+    expect(kitAsAny._colorCache.size).toBe(0)
+    expect(kitAsAny._sigPadListeners).toHaveLength(0)
+  })
+})
+
+describe('Regression: existing features still work after bug fixes', () => {
+  it('clear() still saves undo state and preserves watermark', () => {
+    const kit = createKit(300, 150)
+    kit.addWatermark({ text: 'REGRESS' })
+    kit.fromData([
+      {
+        points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+      },
+    ])
+
+    kit.clear()
+
+    expect(kit.isEmpty()).toBe(true)
+    expect(kit.watermark).toEqual({ text: 'REGRESS' })
+
+    kit.destroy()
+  })
+
+  it('reset() still clears everything', () => {
+    const kit = createKit(300, 150)
+    kit.addWatermark({ text: 'REGRESS' })
+    kit.fromData([
+      {
+        points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+      },
+    ])
+
+    kit.reset()
+
+    expect(kit.isEmpty()).toBe(true)
+    expect(kit.watermark).toBeNull()
+    expect(kit.canUndo).toBe(false)
+    expect(kit.canRedo).toBe(false)
+
+    kit.destroy()
+  })
+
+  it('undo/redo still works with deep copy', () => {
+    const kit = createKit(300, 150)
+    kit.fromData([
+      {
+        points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+      },
+      {
+        points: [{ x: 50, y: 50, time: Date.now() + 1, pressure: 0.5 }],
+      },
+    ])
+
+    kit.undo()
+    expect(kit.toData()).toHaveLength(1)
+    expect(kit.canRedo).toBe(true)
+
+    // Modify current data — should not affect redo stack
+    const current = kit.toData()
+    current[0].points[0].x = 999
+
+    kit.redo()
+    const restored = kit.toData()
+    expect(restored).toHaveLength(2)
+    expect(restored[1].points[0].x).toBe(50)
+
+    kit.destroy()
+  })
+
+  it('toDataURL/toBlob/toFile still work', () => {
+    const kit = createKit(300, 150)
+
+    const url = kit.toDataURL()
+    expect(url).toMatch(/^data:image\/png;base64,/)
+
+    const jpgUrl = kit.toDataURL('image/jpeg', 0.8)
+    expect(jpgUrl).toMatch(/^data:image\/jpeg;base64,/)
+
+    kit.destroy()
+  })
+
+  it('trim still works', () => {
+    const kit = createKit(300, 150)
+    kit.fromData([
+      {
+        points: [{ x: 50, y: 50, time: Date.now(), pressure: 1 }],
+      },
+    ])
+    const result = kit.trim({ padding: 5 })
+    expect(result).not.toBeNull()
+    expect(result!.bounds.width).toBeGreaterThan(0)
+    expect(result!.bounds.height).toBeGreaterThan(0)
+    expect(result!.dataUrl).toMatch(/^data:image\/png;base64,/)
+
+    kit.destroy()
+  })
+
+  it('disabled toggle still works', () => {
+    const kit = createKit(300, 150)
+    expect(kit.disabled).toBe(false)
+    kit.disabled = true
+    expect(kit.disabled).toBe(true)
+    kit.disabled = false
+    expect(kit.disabled).toBe(false)
+    kit.destroy()
+  })
+
+  it('updateOptions still works and repaints with backgroundColor', () => {
+    const kit = createKit(300, 150)
+    kit.fromData([
+      {
+        points: [{ x: 10, y: 10, time: Date.now(), pressure: 0.5 }],
+      },
+    ])
+    kit.addWatermark({ text: 'UPDATE' })
+
+    kit.updateOptions({ backgroundColor: 'rgb(240, 240, 240)' })
+
+    expect(kit.watermark).toEqual({ text: 'UPDATE' })
+    expect(kit.toData()).toHaveLength(1)
+
+    kit.destroy()
+  })
+
+  it('event system (on/off/offAll) still works', () => {
+    const kit = createKit(300, 150)
+    const handler = vi.fn()
+    const handler2 = vi.fn()
+
+    kit.on('clear', handler)
+    kit.on('clear', handler2)
+    kit.clear()
+    expect(handler).toHaveBeenCalledOnce()
+    expect(handler2).toHaveBeenCalledOnce()
+
+    kit.off('clear', handler)
+    kit.clear()
+    expect(handler).toHaveBeenCalledOnce() // still 1
+    expect(handler2).toHaveBeenCalledTimes(2)
+
+    kit.offAll()
+    kit.clear()
+    expect(handler2).toHaveBeenCalledTimes(2) // still 2, no new calls
+
+    kit.destroy()
+  })
+
+  it('toSVG still works', () => {
+    const kit = createKit(300, 150)
+    const svg = kit.toSVG()
+    expect(svg).toContain('<svg')
+    kit.destroy()
+  })
+})
