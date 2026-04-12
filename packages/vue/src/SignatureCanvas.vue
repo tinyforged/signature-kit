@@ -8,14 +8,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { SignatureKit } from '@tinyforged/signature-kit'
-import type {
-  SignatureKitOptions,
-  WatermarkOptions,
-  TrimOptions,
-  TrimResult,
-} from '@tinyforged/signature-kit'
+import { computed, toRef } from 'vue'
+import { useSignatureKit } from './useSignatureKit'
 import type { SignatureCanvasProps, SignatureCanvasEmits } from './types'
 
 const props = withDefaults(defineProps<SignatureCanvasProps>(), {
@@ -30,8 +24,51 @@ const props = withDefaults(defineProps<SignatureCanvasProps>(), {
 
 const emit = defineEmits<SignatureCanvasEmits>()
 
-const canvasRef = ref<HTMLCanvasElement | null>(null)
-let kit: SignatureKit | null = null
+const {
+  canvasRef,
+  canUndo,
+  canRedo,
+  isEmpty,
+  clear,
+  reset,
+  undo,
+  redo,
+  toDataURL,
+  toBlob,
+  toFile,
+  toSVG,
+  fromDataURL,
+  fromFile,
+  toData,
+  fromData,
+  addWatermark,
+  clearWatermark,
+  trim,
+  getKit,
+  getCanvas,
+} = useSignatureKit({
+  penColor: toRef(props, 'penColor'),
+  backgroundColor: toRef(props, 'backgroundColor'),
+  minWidth: toRef(props, 'minWidth'),
+  maxWidth: toRef(props, 'maxWidth'),
+  minDistance: toRef(props, 'minDistance'),
+  dotSize: toRef(props, 'dotSize'),
+  velocityFilterWeight: toRef(props, 'velocityFilterWeight'),
+  throttle: toRef(props, 'throttle'),
+  clearOnResize: toRef(props, 'clearOnResize'),
+  scaleOnResize: toRef(props, 'scaleOnResize'),
+  disabled: toRef(props, 'disabled'),
+  defaultUrl: toRef(props, 'defaultUrl'),
+  watermark: toRef(props, 'watermark'),
+  onBegin: (e) => emit('beginStroke', e),
+  onEnd: (e) => emit('endStroke', e),
+  onClear: () => emit('clear'),
+  onUndo: () => emit('undo'),
+  onRedo: () => emit('redo'),
+})
+
+// canvasRef is used as a template ref on <canvas ref="canvasRef">
+void canvasRef
 
 const containerStyle = computed(() => ({
   width: props.width,
@@ -39,154 +76,10 @@ const containerStyle = computed(() => ({
   position: 'relative' as const,
 }))
 
-function buildOptions(): SignatureKitOptions {
-  return {
-    penColor: props.penColor,
-    backgroundColor: props.backgroundColor,
-    minWidth: props.minWidth,
-    maxWidth: props.maxWidth,
-    minDistance: props.minDistance,
-    dotSize: props.dotSize,
-    velocityFilterWeight: props.velocityFilterWeight,
-    throttle: props.throttle,
-    clearOnResize: props.clearOnResize,
-    scaleOnResize: props.scaleOnResize,
-    disabled: props.disabled,
-  }
-}
-
-onMounted(() => {
-  if (!canvasRef.value) return
-  kit = new SignatureKit(canvasRef.value, buildOptions())
-
-  kit.on('beginStroke', (detail) => emit('beginStroke', detail.originalEvent!))
-  kit.on('endStroke', (detail) => emit('endStroke', detail.originalEvent!))
-  kit.on('clear', () => emit('clear'))
-  kit.on('undo', () => emit('undo'))
-  kit.on('redo', () => emit('redo'))
-
-  if (props.defaultUrl) {
-    kit.fromDataURL(props.defaultUrl)
-  }
-  if (props.watermark) {
-    kit.addWatermark(props.watermark)
-  }
-})
-
-onBeforeUnmount(() => {
-  kit?.destroy()
-  kit = null
-})
-
-// React to option changes
-watch(
-  () => [
-    props.penColor,
-    props.backgroundColor,
-    props.minWidth,
-    props.maxWidth,
-    props.minDistance,
-    props.dotSize,
-    props.velocityFilterWeight,
-    props.throttle,
-    props.clearOnResize,
-    props.scaleOnResize,
-  ],
-  () => {
-    if (kit) kit.updateOptions(buildOptions())
-  },
-)
-
-watch(
-  () => props.disabled,
-  (val) => {
-    if (kit) kit.disabled = val
-  },
-)
-
-watch(
-  () => props.watermark,
-  (newVal) => {
-    if (kit) {
-      if (newVal) {
-        kit.addWatermark(newVal)
-      } else {
-        kit.clearWatermark()
-      }
-    }
-  },
-)
-
-// --- Exposed methods ---
-
 function save(type: string = 'image/png'): string {
-  const dataUrl = kit!.toDataURL(type)
+  const dataUrl = toDataURL(type)
   emit('save', dataUrl)
   return dataUrl
-}
-
-function clear(): void {
-  kit!.clear()
-}
-
-function reset(): void {
-  kit!.reset()
-}
-
-function isEmpty(): boolean {
-  return kit!.isEmpty()
-}
-
-function undo(): void {
-  kit!.undo()
-}
-
-function redo(): void {
-  kit!.redo()
-}
-
-function canUndo(): boolean {
-  return kit!.canUndo
-}
-
-function canRedo(): boolean {
-  return kit!.canRedo
-}
-
-function addWatermark(options: WatermarkOptions): void {
-  kit!.addWatermark(options)
-}
-
-function clearWatermark(): void {
-  kit!.clearWatermark()
-}
-
-function fromDataURL(url: string): Promise<void> {
-  return kit!.fromDataURL(url)
-}
-
-function fromFile(file: File | Blob): Promise<void> {
-  return kit!.fromFile(file)
-}
-
-function toDataURL(type?: string, encoderOptions?: number): string {
-  return kit!.toDataURL(type, encoderOptions)
-}
-
-function toBlob(type?: string, quality?: number): Promise<Blob> {
-  return kit!.toBlob(type, quality)
-}
-
-function toFile(filename?: string, type?: string, quality?: number): Promise<File> {
-  return kit!.toFile(filename, type, quality)
-}
-
-function toSVG(): string {
-  return kit!.toSVG()
-}
-
-function trim(options?: TrimOptions): TrimResult | null {
-  return kit!.trim(options)
 }
 
 defineExpose({
@@ -196,8 +89,8 @@ defineExpose({
   isEmpty,
   undo,
   redo,
-  canUndo,
-  canRedo,
+  canUndo: () => canUndo.value,
+  canRedo: () => canRedo.value,
   addWatermark,
   clearWatermark,
   fromDataURL,
@@ -207,9 +100,9 @@ defineExpose({
   toFile,
   toSVG,
   trim,
-  toData: () => kit!.toData(),
-  fromData: (data: import('@tinyforged/signature-kit').PointGroup[]) => kit!.fromData(data),
-  getKit: () => kit,
-  getCanvas: () => canvasRef.value,
+  toData,
+  fromData,
+  getKit,
+  getCanvas,
 })
 </script>
