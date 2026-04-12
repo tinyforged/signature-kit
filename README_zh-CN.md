@@ -321,7 +321,10 @@ sigRef.value?.toBlob(type?, quality?): Promise<Blob>
 sigRef.value?.toFile(filename?, type?, quality?): Promise<File>
 sigRef.value?.toSVG(): string
 sigRef.value?.trim(options?): TrimResult | null
+sigRef.value?.toData(): PointGroup[]
+sigRef.value?.fromData(data: PointGroup[]): void
 sigRef.value?.getKit(): SignatureKit | null
+sigRef.value?.getCanvas(): HTMLCanvasElement | null
 ```
 
 ---
@@ -397,6 +400,7 @@ function App() {
 sigRef.current?.isEmpty(): boolean
 sigRef.current?.clear(): void
 sigRef.current?.reset(): void
+sigRef.current?.save(type?: string): string
 sigRef.current?.undo(): void
 sigRef.current?.redo(): void
 sigRef.current?.canUndo(): boolean
