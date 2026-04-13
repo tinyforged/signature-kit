@@ -1,12 +1,12 @@
 <template>
-  <div class="demo">
+  <div class="flex bg-white rounded-xl shadow overflow-hidden">
     <!-- Hidden file input -->
-    <input ref="fileInputRef" type="file" accept="image/*" style="display:none" @change="onFileChange" />
+    <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="onFileChange" />
 
     <!-- Left: Canvas + Preview -->
-    <div class="main-area">
-      <div class="toolbar">
-        <div class="toolbar-group">
+    <div class="flex-1 flex flex-col min-w-0">
+      <div class="flex items-center gap-2 px-3 py-2.5 border-b border-gray-200 bg-gray-50 shrink-0 flex-wrap">
+        <div class="flex gap-1.5">
           <button class="btn btn-primary" @click="handleSave('image/png')">PNG</button>
           <button class="btn btn-primary" @click="handleSave('image/jpeg')">JPEG</button>
           <button class="btn btn-primary" @click="handleSaveSVG">SVG</button>
@@ -14,32 +14,32 @@
           <button class="btn btn-outline" @click="handleSaveFile">File</button>
           <button class="btn btn-outline" @click="handleTrim">&#9986; Trim</button>
         </div>
-        <div class="toolbar-group">
-          <button class="btn" @click="handleUndo" :disabled="!activeCanUndo">&#8617; Undo</button>
-          <button class="btn" @click="handleRedo" :disabled="!activeCanRedo">&#8618; Redo</button>
+        <div class="flex gap-1.5 pl-2 border-l border-gray-200">
+          <button class="btn" :disabled="!activeCanUndo" @click="handleUndo">&#8617; Undo</button>
+          <button class="btn" :disabled="!activeCanRedo" @click="handleRedo">&#8618; Redo</button>
           <button class="btn" @click="handleClear">&#128465; Clear</button>
           <button class="btn btn-danger" @click="handleReset">&#128260; Reset</button>
         </div>
-        <div class="toolbar-group">
+        <div class="flex gap-1.5 pl-2 border-l border-gray-200">
           <button class="btn btn-outline" @click="handleLoadFile">&#128194; Load</button>
-          <button class="btn" :class="{ active: isDisabled }" @click="isDisabled = !isDisabled">
+          <button class="btn" :class="isDisabled ? 'bg-amber-50 border-amber-500 text-amber-600' : ''" @click="isDisabled = !isDisabled">
             {{ isDisabled ? '&#9999; Edit' : '&#128274; Lock' }}
           </button>
         </div>
-        <div class="mode-switch">
+        <div class="flex items-center gap-1 ml-auto bg-gray-200 p-0.5 rounded-md border border-gray-300">
           <button
-            class="mode-btn"
-            :class="{ 'mode-btn-active': apiMode === 'component' }"
+            class="px-2 py-0.5 text-xs font-semibold border border-gray-300 rounded bg-white text-gray-600 cursor-pointer"
+            :class="apiMode === 'component' ? 'bg-blue-600 text-white border-blue-600' : ''"
             @click="apiMode = 'component'"
           >Component</button>
           <button
-            class="mode-btn"
-            :class="{ 'mode-btn-active': apiMode === 'composable' }"
+            class="px-2 py-0.5 text-xs font-semibold border border-gray-300 rounded bg-white text-gray-600 cursor-pointer"
+            :class="apiMode === 'composable' ? 'bg-blue-600 text-white border-blue-600' : ''"
             @click="apiMode = 'composable'"
           >useSignatureKit</button>
         </div>
       </div>
-      <div class="canvas-wrapper">
+      <div class="h-80 relative mx-3 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden hover:border-gray-400 transition-colors">
         <SignatureCanvas
           v-if="apiMode === 'component'"
           ref="sigRef"
@@ -66,153 +66,153 @@
         <canvas
           v-show="apiMode === 'composable'"
           ref="hookCanvasRef"
-          class="sig-canvas"
+          class="sig-canvas w-full h-full block"
         />
-        <div v-if="isDisabled" class="disabled-overlay">
+        <div v-if="isDisabled" class="absolute inset-0 flex items-center justify-center bg-white/55 backdrop-blur-sm text-gray-500 text-sm font-medium">
           <span>Read-only mode</span>
         </div>
       </div>
-      <div v-if="previewUrl" class="preview-section">
-        <div class="preview-header">
+      <div v-if="previewUrl" class="shrink-0 border-t border-gray-200 px-3 py-2">
+        <div class="flex items-center justify-between py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
           <span>Preview</span>
-          <button class="btn-close" @click="previewUrl = ''">&#10005;</button>
+          <button class="px-1.5 py-0.5 text-sm border border-gray-300 rounded bg-white text-gray-400 cursor-pointer leading-none" @click="previewUrl = ''">&#10005;</button>
         </div>
-        <div class="preview-body">
-          <img :src="previewUrl" alt="Signature preview" />
+        <div class="p-2 flex justify-center bg-[repeating-conic-gradient(gray-200_0%_25%,gray-100_0%_50%)] bg-size-[16px_16px] bg-center rounded">
+          <img :src="previewUrl" alt="Signature preview" class="max-w-full max-h-40 border border-gray-300 rounded bg-white" />
         </div>
       </div>
     </div>
 
     <!-- Right: Settings panel -->
-    <aside class="sidebar">
+    <aside class="w-70 shrink-0 border-l border-gray-200 overflow-y-auto max-h-155">
       <!-- Composable Info (only in hook mode) -->
-      <details v-if="apiMode === 'composable'" class="panel-collapsible" open>
-        <summary class="panel-summary">
-          <h3 class="panel-title">Composable Info</h3>
-          <span class="panel-arrow">&#9662;</span>
+      <details v-if="apiMode === 'composable'" open class="px-3 py-2.5 border-b border-gray-200">
+        <summary class="cursor-pointer list-none flex items-center justify-between select-none">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0">Composable Info</h3>
+          <span class="text-[0.6rem] text-gray-400 transition-transform duration-200">&#9662;</span>
         </summary>
-        <div class="panel-body">
-          <div class="hook-info">
-            <code>useSignatureKit(options)</code>{'\n'}
-            Returns: canvasRef, canUndo, canRedo, isEmpty, clear, reset,{'\n'}
-            undo, redo, toDataURL, toBlob, toFile, toSVG, fromDataURL,{'\n'}
+        <div class="pt-1.5">
+          <div class="text-[0.65rem] font-mono text-gray-500 bg-gray-100 px-1.5 py-1 rounded border border-gray-200 mt-1 leading-relaxed whitespace-pre-wrap">
+            <code>useSignatureKit(options)</code>
+            Returns: canvasRef, canUndo, canRedo, isEmpty, clear, reset,
+            undo, redo, toDataURL, toBlob, toFile, toSVG, fromDataURL,
             fromFile, toData, fromData, addWatermark, clearWatermark, trim, getKit, getCanvas
           </div>
         </div>
       </details>
 
       <!-- Pen & Background -->
-      <details class="panel-collapsible" open>
-        <summary class="panel-summary">
-          <h3 class="panel-title">Pen &amp; Background</h3>
-          <span class="panel-arrow">&#9662;</span>
+      <details open class="px-3 py-2.5 border-b border-gray-200">
+        <summary class="cursor-pointer list-none flex items-center justify-between select-none">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0">Pen &amp; Background</h3>
+          <span class="text-[0.6rem] text-gray-400 transition-transform duration-200">&#9662;</span>
         </summary>
-        <div class="panel-body">
-          <div class="field-row">
-            <label class="field-label">Pen Color</label>
-            <div class="color-wrap">
-              <input type="color" v-model="penColor" />
-              <code class="color-hex">{{ penColor }}</code>
+        <div class="pt-1.5">
+          <div class="mb-2">
+            <label class="block text-xs font-medium text-gray-600 mb-0.5">Pen Color</label>
+            <div class="flex items-center gap-1.5">
+              <input type="color" v-model="penColor" class="w-6.5 h-6.5 p-0 border border-gray-300 rounded-md cursor-pointer bg-none" />
+              <code class="text-[0.68rem] font-mono text-gray-400">{{ penColor }}</code>
             </div>
           </div>
-          <div class="field-row">
-            <label class="field-label">Background</label>
-            <div class="color-wrap">
-              <input type="color" v-model="backgroundColor" />
-              <code class="color-hex">{{ backgroundColor }}</code>
+          <div class="mb-2">
+            <label class="block text-xs font-medium text-gray-600 mb-0.5">Background</label>
+            <div class="flex items-center gap-1.5">
+              <input type="color" v-model="backgroundColor" class="w-6.5 h-6.5 p-0 border border-gray-300 rounded-md cursor-pointer bg-none" />
+              <code class="text-[0.68rem] font-mono text-gray-400">{{ backgroundColor }}</code>
             </div>
           </div>
-          <div class="field-row">
-            <label class="field-label">Min Width</label>
-            <div class="slider-wrap">
-              <input type="range" min="0.1" max="5" step="0.1" v-model.number="minWidth" />
-              <span class="slider-val">{{ minWidth }}</span>
+          <div class="mb-2">
+            <label class="block text-xs font-medium text-gray-600 mb-0.5">Min Width</label>
+            <div class="flex items-center gap-1.5">
+              <input type="range" min="0.1" max="5" step="0.1" v-model.number="minWidth" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+              <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ minWidth }}</span>
             </div>
           </div>
-          <div class="field-row">
-            <label class="field-label">Max Width</label>
-            <div class="slider-wrap">
-              <input type="range" min="0.5" max="10" step="0.5" v-model.number="maxWidth" />
-              <span class="slider-val">{{ maxWidth }}</span>
+          <div class="mb-2">
+            <label class="block text-xs font-medium text-gray-600 mb-0.5">Max Width</label>
+            <div class="flex items-center gap-1.5">
+              <input type="range" min="0.5" max="10" step="0.5" v-model.number="maxWidth" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+              <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ maxWidth }}</span>
             </div>
           </div>
         </div>
       </details>
 
       <!-- Advanced Pen -->
-      <details class="panel-collapsible">
-        <summary class="panel-summary">
-          <h3 class="panel-title">Advanced Pen</h3>
-          <span class="panel-arrow">&#9662;</span>
+      <details class="px-3 py-2.5 border-b border-gray-200">
+        <summary class="cursor-pointer list-none flex items-center justify-between select-none">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0">Advanced Pen</h3>
+          <span class="text-[0.6rem] text-gray-400 transition-transform duration-200">&#9662;</span>
         </summary>
-        <div class="panel-body">
-          <div class="field-row">
-            <label class="field-label">Dot Size (single click)</label>
-            <div class="slider-wrap">
-              <input type="range" min="0" max="10" step="0.5" v-model.number="dotSize" />
-              <span class="slider-val">{{ dotSize }}</span>
+        <div class="pt-1.5">
+          <div class="mb-2">
+            <label class="block text-xs font-medium text-gray-600 mb-0.5">Dot Size (single click)</label>
+            <div class="flex items-center gap-1.5">
+              <input type="range" min="0" max="10" step="0.5" v-model.number="dotSize" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+              <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ dotSize }}</span>
             </div>
           </div>
-          <div class="field-row">
-            <label class="field-label">Min Distance (px)</label>
-            <div class="slider-wrap">
-              <input type="range" min="1" max="20" step="1" v-model.number="minDistance" />
-              <span class="slider-val">{{ minDistance }}</span>
+          <div class="mb-2">
+            <label class="block text-xs font-medium text-gray-600 mb-0.5">Min Distance (px)</label>
+            <div class="flex items-center gap-1.5">
+              <input type="range" min="1" max="20" step="1" v-model.number="minDistance" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+              <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ minDistance }}</span>
             </div>
           </div>
-          <div class="field-row">
-            <label class="field-label">Velocity Filter Weight</label>
-            <div class="slider-wrap">
-              <input type="range" min="0" max="1" step="0.05" v-model.number="velocityFilterWeight" />
-              <span class="slider-val">{{ velocityFilterWeight }}</span>
+          <div class="mb-2">
+            <label class="block text-xs font-medium text-gray-600 mb-0.5">Velocity Filter Weight</label>
+            <div class="flex items-center gap-1.5">
+              <input type="range" min="0" max="1" step="0.05" v-model.number="velocityFilterWeight" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+              <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ velocityFilterWeight }}</span>
             </div>
           </div>
-          <div class="field-row">
-            <label class="field-label">Throttle (ms)</label>
-            <div class="slider-wrap">
-              <input type="range" min="0" max="100" step="1" v-model.number="throttle" />
-              <span class="slider-val">{{ throttle }}</span>
+          <div class="mb-2">
+            <label class="block text-xs font-medium text-gray-600 mb-0.5">Throttle (ms)</label>
+            <div class="flex items-center gap-1.5">
+              <input type="range" min="0" max="100" step="1" v-model.number="throttle" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+              <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ throttle }}</span>
             </div>
           </div>
         </div>
       </details>
 
       <!-- Resize Behavior -->
-      <details class="panel-collapsible">
-        <summary class="panel-summary">
-          <h3 class="panel-title">Resize Behavior</h3>
-          <span class="panel-arrow">&#9662;</span>
+      <details class="px-3 py-2.5 border-b border-gray-200">
+        <summary class="cursor-pointer list-none flex items-center justify-between select-none">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0">Resize Behavior</h3>
+          <span class="text-[0.6rem] text-gray-400 transition-transform duration-200">&#9662;</span>
         </summary>
-        <div class="panel-body">
-          <div class="checkbox-row">
+        <div class="pt-1.5">
+          <div class="flex items-center gap-1.5 mb-2">
             <input type="checkbox" id="clearOnResize" v-model="clearOnResize" />
-            <label for="clearOnResize" class="checkbox-label">Clear canvas on resize</label>
+            <label for="clearOnResize" class="text-xs font-medium text-gray-600 cursor-pointer">Clear canvas on resize</label>
           </div>
-          <div class="checkbox-row">
+          <div class="flex items-center gap-1.5 mb-2">
             <input type="checkbox" id="scaleOnResize" v-model="scaleOnResize" />
-            <label for="scaleOnResize" class="checkbox-label">Scale strokes on resize</label>
+            <label for="scaleOnResize" class="text-xs font-medium text-gray-600 cursor-pointer">Scale strokes on resize</label>
           </div>
-          <p class="info-box">
+          <p class="text-[0.65rem] font-mono text-gray-500 bg-gray-100 px-1.5 py-1 rounded border border-gray-200 break-all mt-1">
             Try resizing your browser window to see the effect.
           </p>
         </div>
       </details>
 
       <!-- Watermark -->
-      <details class="panel-collapsible" open>
-        <summary class="panel-summary">
-          <h3 class="panel-title">Watermark</h3>
-          <span class="panel-arrow">&#9662;</span>
+      <details open class="px-3 py-2.5 border-b border-gray-200">
+        <summary class="cursor-pointer list-none flex items-center justify-between select-none">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0">Watermark</h3>
+          <span class="text-[0.6rem] text-gray-400 transition-transform duration-200">&#9662;</span>
         </summary>
-        <div class="panel-body">
-          <div class="field-row">
-            <label class="field-label">Text</label>
-            <textarea v-model="wm.text" rows="2" placeholder="Line 1&#10;Line 2"></textarea>
+        <div class="pt-1.5">
+          <div class="mb-2">
+            <label class="block text-xs font-medium text-gray-600 mb-0.5">Text</label>
+            <textarea v-model="wm.text" rows="2" placeholder="Line 1&#10;Line 2" class="w-full text-xs px-1 py-0.5 border border-gray-300 rounded-md resize-y outline-none"></textarea>
           </div>
-          <div class="field-grid">
-            <div class="field-row">
-              <label class="field-label">Font</label>
-              <select v-model="wm.fontFamily">
+          <div class="grid grid-cols-2 gap-x-2 mb-2">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">Font</label>
+              <select v-model="wm.fontFamily" class="w-full px-1 py-0.5 text-xs border border-gray-300 rounded-md bg-white text-gray-700 outline-none cursor-pointer focus:border-blue-600">
                 <option value="sans-serif">Sans-serif</option>
                 <option value="serif">Serif</option>
                 <option value="Georgia, serif">Georgia</option>
@@ -221,17 +221,17 @@
                 <option value="cursive">Cursive</option>
               </select>
             </div>
-            <div class="field-row">
-              <label class="field-label">Style</label>
-              <select v-model="wm.fontStyle">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">Style</label>
+              <select v-model="wm.fontStyle" class="w-full px-1 py-0.5 text-xs border border-gray-300 rounded-md bg-white text-gray-700 outline-none cursor-pointer focus:border-blue-600">
                 <option value="normal">Normal</option>
                 <option value="italic">Italic</option>
                 <option value="oblique">Oblique</option>
               </select>
             </div>
-            <div class="field-row">
-              <label class="field-label">Weight</label>
-              <select v-model="wm.fontWeight">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">Weight</label>
+              <select v-model="wm.fontWeight" class="w-full px-1 py-0.5 text-xs border border-gray-300 rounded-md bg-white text-gray-700 outline-none cursor-pointer focus:border-blue-600">
                 <option value="normal">Normal</option>
                 <option value="bold">Bold</option>
                 <option value="lighter">Lighter</option>
@@ -241,65 +241,65 @@
               </select>
             </div>
           </div>
-          <div class="field-grid">
-            <div class="field-row">
-              <label class="field-label">Size</label>
-              <div class="slider-wrap">
-                <input type="range" min="10" max="60" step="1" v-model.number="wm.fontSize" />
-                <span class="slider-val">{{ wm.fontSize }}px</span>
+          <div class="grid grid-cols-2 gap-x-2 mb-2">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">Size</label>
+              <div class="flex items-center gap-1.5">
+                <input type="range" min="10" max="60" step="1" v-model.number="wm.fontSize" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+                <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ wm.fontSize }}px</span>
               </div>
             </div>
-            <div class="field-row">
-              <label class="field-label">Line Height</label>
-              <div class="slider-wrap">
-                <input type="range" min="1" max="3" step="0.1" v-model.number="wm.lineHeight" />
-                <span class="slider-val">{{ wm.lineHeight }}</span>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">Line Height</label>
+              <div class="flex items-center gap-1.5">
+                <input type="range" min="1" max="3" step="0.1" v-model.number="wm.lineHeight" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+                <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ wm.lineHeight }}</span>
               </div>
             </div>
-            <div class="field-row">
-              <label class="field-label">Rotation</label>
-              <div class="slider-wrap">
-                <input type="range" min="-180" max="180" step="1" v-model.number="wm.rotation" />
-                <span class="slider-val">{{ wm.rotation }}&deg;</span>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">Rotation</label>
+              <div class="flex items-center gap-1.5">
+                <input type="range" min="-180" max="180" step="1" v-model.number="wm.rotation" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+                <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ wm.rotation }}&deg;</span>
               </div>
             </div>
           </div>
-          <div class="field-grid">
-            <div class="field-row">
-              <label class="field-label">Render</label>
-              <select v-model="wm.style">
+          <div class="grid grid-cols-2 gap-x-2 mb-2">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">Render</label>
+              <select v-model="wm.style" class="w-full px-1 py-0.5 text-xs border border-gray-300 rounded-md bg-white text-gray-700 outline-none cursor-pointer focus:border-blue-600">
                 <option value="fill">Fill</option>
                 <option value="stroke">Stroke</option>
                 <option value="all">Fill + Stroke</option>
               </select>
             </div>
-            <div class="field-row">
-              <label class="field-label">Color</label>
-              <div class="color-wrap">
-                <input type="color" v-model="wm.fillStyleHex" />
-                <code class="color-hex">{{ wm.fillStyleHex }}</code>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">Color</label>
+              <div class="flex items-center gap-1.5">
+                <input type="color" v-model="wm.fillStyleHex" class="w-6.5 h-6.5 p-0 border border-gray-300 rounded-md cursor-pointer bg-none" />
+                <code class="text-[0.68rem] font-mono text-gray-400">{{ wm.fillStyleHex }}</code>
               </div>
             </div>
           </div>
-          <div class="field-row">
-            <label class="field-label">Opacity</label>
-            <div class="slider-wrap">
-              <input type="range" min="0.05" max="1" step="0.05" v-model.number="wm.opacity" />
-              <span class="slider-val">{{ wm.opacity }}</span>
+          <div class="mb-2">
+            <label class="block text-xs font-medium text-gray-600 mb-0.5">Opacity</label>
+            <div class="flex items-center gap-1.5">
+              <input type="range" min="0.05" max="1" step="0.05" v-model.number="wm.opacity" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+              <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ wm.opacity }}</span>
             </div>
           </div>
-          <div class="field-grid">
-            <div class="field-row">
-              <label class="field-label">Align</label>
-              <select v-model="wm.align">
+          <div class="grid grid-cols-2 gap-x-2 mb-2">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">Align</label>
+              <select v-model="wm.align" class="w-full px-1 py-0.5 text-xs border border-gray-300 rounded-md bg-white text-gray-700 outline-none cursor-pointer focus:border-blue-600">
                 <option value="left">Left</option>
                 <option value="center">Center</option>
                 <option value="right">Right</option>
               </select>
             </div>
-            <div class="field-row">
-              <label class="field-label">Baseline</label>
-              <select v-model="wm.baseline">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">Baseline</label>
+              <select v-model="wm.baseline" class="w-full px-1 py-0.5 text-xs border border-gray-300 rounded-md bg-white text-gray-700 outline-none cursor-pointer focus:border-blue-600">
                 <option value="top">Top</option>
                 <option value="middle">Middle</option>
                 <option value="bottom">Bottom</option>
@@ -307,19 +307,19 @@
               </select>
             </div>
           </div>
-          <div class="field-grid">
-            <div class="field-row">
-              <label class="field-label">X</label>
-              <div class="slider-wrap">
-                <input type="range" min="0" max="400" step="5" v-model.number="wm.x" />
-                <span class="slider-val">{{ wm.x }}</span>
+          <div class="grid grid-cols-2 gap-x-2 mb-2">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">X</label>
+              <div class="flex items-center gap-1.5">
+                <input type="range" min="0" max="400" step="5" v-model.number="wm.x" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+                <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ wm.x }}</span>
               </div>
             </div>
-            <div class="field-row">
-              <label class="field-label">Y</label>
-              <div class="slider-wrap">
-                <input type="range" min="0" max="300" step="5" v-model.number="wm.y" />
-                <span class="slider-val">{{ wm.y }}</span>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-0.5">Y</label>
+              <div class="flex items-center gap-1.5">
+                <input type="range" min="0" max="300" step="5" v-model.number="wm.y" class="flex-1 h-1 bg-gray-200 rounded-sm outline-none" />
+                <span class="text-[0.68rem] font-mono text-gray-500 min-w-8 text-right">{{ wm.y }}</span>
               </div>
             </div>
           </div>
@@ -329,19 +329,19 @@
       </details>
 
       <!-- Data & Info -->
-      <details class="panel-collapsible">
-        <summary class="panel-summary">
-          <h3 class="panel-title">Data &amp; Info</h3>
-          <span class="panel-arrow">&#9662;</span>
+      <details class="px-3 py-2.5 border-b border-gray-200">
+        <summary class="cursor-pointer list-none flex items-center justify-between select-none">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0">Data &amp; Info</h3>
+          <span class="text-[0.6rem] text-gray-400 transition-transform duration-200">&#9662;</span>
         </summary>
-        <div class="panel-body">
+        <div class="pt-1.5">
           <button class="btn btn-outline btn-block" @click="handleShowData">Show Stroke Data (toData)</button>
-          <div v-if="dataInfo" class="info-box">{{ dataInfo }}</div>
-          <button class="btn btn-outline btn-block" style="margin-top:0.5rem" @click="handleShowKitInfo">Show Kit Info (getKit/getCanvas)</button>
-          <div v-if="kitInfo" class="info-box">{{ kitInfo }}</div>
-          <div v-if="saveCallbackUrl" style="margin-top:0.5rem">
-            <div class="field-label">onSave callback received:</div>
-            <div class="info-box">{{ saveCallbackUrl }}</div>
+          <div v-if="dataInfo" class="text-[0.68rem] font-mono text-gray-500 bg-gray-100 px-1.5 py-1 rounded border border-gray-200 break-all mt-1">{{ dataInfo }}</div>
+          <button class="btn btn-outline btn-block mt-2" @click="handleShowKitInfo">Show Kit Info (getKit/getCanvas)</button>
+          <div v-if="kitInfo" class="text-[0.68rem] font-mono text-gray-500 bg-gray-100 px-1.5 py-1 rounded border border-gray-200 break-all mt-1">{{ kitInfo }}</div>
+          <div v-if="saveCallbackUrl" class="mt-2">
+            <div class="block text-xs font-medium text-gray-600">onSave callback received:</div>
+            <div class="text-[0.68rem] font-mono text-gray-500 bg-gray-100 px-1.5 py-1 rounded border border-gray-200 break-all mt-1">{{ saveCallbackUrl }}</div>
           </div>
         </div>
       </details>
@@ -391,7 +391,6 @@ const {
   canvasRef: hookCanvasRef,
   canUndo: hookCanUndo,
   canRedo: hookCanRedo,
-  isEmpty: hookIsEmpty,
   clear: hookClear,
   reset: hookReset,
   undo: hookUndo,
@@ -400,10 +399,8 @@ const {
   toBlob: hookToBlob,
   toFile: hookToFile,
   toSVG: hookToSVG,
-  fromDataURL: hookFromDataURL,
   fromFile: hookFromFile,
   toData: hookToData,
-  fromData: hookFromData,
   addWatermark: hookAddWatermark,
   clearWatermark: hookClearWatermark,
   trim: hookTrim,
@@ -478,6 +475,7 @@ function handleSaveBlob() {
   const blob = apiMode.value === 'composable'
     ? hookToBlob('image/png')
     : sigRef.value?.toBlob('image/png')
+  if (!blob) return
   blob.then((b) => {
     const url = URL.createObjectURL(b)
     previewUrl.value = url
@@ -492,6 +490,7 @@ function handleSaveFile() {
   const file = apiMode.value === 'composable'
     ? hookToFile('signature.png', 'image/png')
     : sigRef.value?.toFile('signature.png', 'image/png')
+  if (!file) return
   file.then((f) => {
     const url = URL.createObjectURL(f)
     previewUrl.value = url
@@ -627,436 +626,3 @@ function updateCanStates() {
   canRedoState.value = sigRef.value?.canRedo() ?? false
 }
 </script>
-
-<style scoped>
-.demo {
-  display: flex;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-/* Left column: toolbar + canvas + preview */
-.main-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid #f0f0f0;
-  background: #fafbfc;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.toolbar-group {
-  display: flex;
-  gap: 0.3rem;
-}
-
-.toolbar-group + .toolbar-group {
-  padding-left: 0.5rem;
-  border-left: 1px solid #e8e8e8;
-}
-
-.canvas-wrapper {
-  height: 320px;
-  position: relative;
-  margin: 0.75rem;
-  border: 2px dashed #e0e0e0;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: border-color 0.2s;
-}
-
-.canvas-wrapper:hover {
-  border-color: #bbb;
-}
-
-.sig-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.disabled-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(1px);
-  color: #888;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-/* Preview below canvas */
-.preview-section {
-  flex-shrink: 0;
-  border-top: 1px solid #f0f0f0;
-  padding: 0.5rem 0.75rem;
-}
-
-.preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.3rem 0;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.preview-body {
-  padding: 0.5rem;
-  display: flex;
-  justify-content: center;
-  background: repeating-conic-gradient(#e8e8e8 0% 25%, #f5f5f5 0% 50%) 50% / 16px 16px;
-  border-radius: 4px;
-}
-
-.preview-body img {
-  max-width: 100%;
-  max-height: 160px;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  background: white;
-}
-
-/* Right sidebar */
-.sidebar {
-  width: 280px;
-  flex-shrink: 0;
-  border-left: 1px solid #f0f0f0;
-  overflow-y: auto;
-  max-height: 620px;
-}
-
-.panel-collapsible {
-  padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.panel-collapsible summary {
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  user-select: none;
-}
-
-.panel-collapsible summary::-webkit-details-marker {
-  display: none;
-}
-
-.panel-summary .panel-title {
-  margin-bottom: 0;
-}
-
-.panel-arrow {
-  font-size: 0.6rem;
-  color: #bbb;
-  transition: transform 0.2s;
-}
-
-.panel-collapsible[open] .panel-arrow {
-  transform: rotate(180deg);
-}
-
-.panel-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin: 0 0 0.5rem;
-}
-
-.panel-body {
-  padding-top: 0.35rem;
-}
-
-/* Form fields */
-.field-row {
-  margin-bottom: 0.5rem;
-}
-
-.field-label {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: #555;
-  margin-bottom: 0.15rem;
-}
-
-.field-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.field-grid > .field-row {
-  margin-bottom: 0;
-}
-
-.color-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.color-wrap input[type="color"] {
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  cursor: pointer;
-  background: none;
-}
-
-.color-hex {
-  font-size: 0.68rem;
-  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-  color: #999;
-}
-
-.slider-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.slider-wrap input[type="range"] {
-  flex: 1;
-  height: 4px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: #e8e8e8;
-  border-radius: 2px;
-  outline: none;
-}
-
-.slider-wrap input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #1a73e8;
-  cursor: pointer;
-  border: 2px solid white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.slider-val {
-  font-size: 0.68rem;
-  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-  color: #888;
-  min-width: 2rem;
-  text-align: right;
-}
-
-select {
-  width: 100%;
-  padding: 0.2rem 0.3rem;
-  font-size: 0.75rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  background: white;
-  color: #333;
-  outline: none;
-  cursor: pointer;
-}
-
-select:focus {
-  border-color: #1a73e8;
-}
-
-textarea {
-  width: 100%;
-  font-size: 0.75rem;
-  padding: 0.25rem 0.35rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  resize: vertical;
-  outline: none;
-  font-family: inherit;
-}
-
-textarea:focus {
-  border-color: #1a73e8;
-}
-
-/* Checkbox */
-.checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.5rem;
-}
-
-.checkbox-label {
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: #555;
-  cursor: pointer;
-}
-
-/* Info box */
-.info-box {
-  font-size: 0.68rem;
-  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-  color: #666;
-  background: #f8f9fa;
-  padding: 0.3rem 0.4rem;
-  border-radius: 4px;
-  border: 1px solid #eee;
-  word-break: break-all;
-  margin-top: 0.25rem;
-}
-
-/* Mode switch */
-.mode-switch {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  margin-left: auto;
-  background: #f0f0f0;
-  padding: 0.2rem;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
-}
-
-.mode-btn {
-  padding: 0.15rem 0.5rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  background: white;
-  color: #555;
-  cursor: pointer;
-}
-
-.mode-btn-active {
-  background: #1a73e8;
-  color: white;
-  border-color: #1a73e8;
-}
-
-/* Hook/composable info */
-.hook-info {
-  font-size: 0.65rem;
-  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-  color: #888;
-  background: #f8f9fa;
-  padding: 0.3rem 0.4rem;
-  border-radius: 4px;
-  border: 1px solid #e8e8e8;
-  margin-top: 0.25rem;
-  line-height: 1.4;
-  white-space: pre-wrap;
-}
-
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.3rem 0.55rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  background: white;
-  color: #333;
-  cursor: pointer;
-  font-size: 0.78rem;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: all 0.15s;
-}
-
-.btn:hover:not(:disabled) {
-  background: #f5f5f5;
-  border-color: #d0d0d0;
-}
-
-.btn:active:not(:disabled) {
-  transform: scale(0.97);
-}
-
-.btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background: #1a73e8;
-  color: white;
-  border-color: #1a73e8;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #1765cc;
-  border-color: #1765cc;
-}
-
-.btn-outline {
-  border-color: #bbb;
-  background: transparent;
-  color: #555;
-}
-
-.btn-outline:hover:not(:disabled) {
-  background: #f5f5f5;
-}
-
-.btn-danger {
-  background: #fff0f0;
-  border-color: #e8a0a0;
-  color: #c53030;
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: #fee2e2;
-}
-
-.btn.active {
-  background: #fef3e0;
-  border-color: #f5a623;
-  color: #e67e00;
-}
-
-.btn-block {
-  width: 100%;
-  justify-content: center;
-  margin-top: 0.25rem;
-}
-
-.btn-close {
-  padding: 0.1rem 0.35rem;
-  font-size: 0.8rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  background: white;
-  color: #999;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.btn-close:hover {
-  background: #f5f5f5;
-}
-</style>
