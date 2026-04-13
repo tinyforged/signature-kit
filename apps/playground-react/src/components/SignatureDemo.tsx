@@ -39,7 +39,7 @@ const css = {
   sliderVal: { fontSize: '0.68rem', fontFamily: "'SF Mono','Fira Code','Consolas',monospace", color: '#888', minWidth: '2rem', textAlign: 'right' as const },
   select: { width: '100%', padding: '0.2rem 0.3rem', fontSize: '0.75rem', border: '1px solid #e0e0e0', borderRadius: 6, background: 'white', color: '#333', outline: 'none', cursor: 'pointer' },
   textarea: { width: '100%', fontSize: '0.75rem', padding: '0.25rem 0.35rem', border: '1px solid #e0e0e0', borderRadius: 6, resize: 'vertical' as any, outline: 'none', fontFamily: 'inherit' },
-  btn: { display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.3rem 0.55rem', border: '1px solid #e0e0e0', borderRadius: 6, background: 'white', color: '#333', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 500, whiteSpace: 'nowrap' as const, transition: 'all 0.15s' },
+  btn: { display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.3rem 0.55rem', borderWidth: 1, borderStyle: 'solid', borderColor: '#e0e0e0', borderRadius: 6, background: 'white', color: '#333', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 500, whiteSpace: 'nowrap' as const, transition: 'all 0.15s' },
   btnDisabled: { opacity: 0.35, cursor: 'not-allowed' },
   btnActive: { background: '#fef3e0', borderColor: '#f5a623', color: '#e67e00' },
   btnDanger: { background: '#fff0f0', borderColor: '#e8a0a0', color: '#c53030' },
@@ -52,7 +52,7 @@ const css = {
   infoBox: { fontSize: '0.68rem', fontFamily: "'SF Mono','Fira Code','Consolas',monospace", color: '#666', background: '#f8f9fa', padding: '0.3rem 0.4rem', borderRadius: 4, border: '1px solid #eee', wordBreak: 'break-all' as const, marginTop: '0.25rem' },
   fileInput: { display: 'none' },
   modeSwitch: { display: 'flex', alignItems: 'center', gap: '0.3rem', marginLeft: 'auto', background: '#f0f0f0', padding: '0.2rem', borderRadius: 6, border: '1px solid #e0e0e0' },
-  modeBtn: { padding: '0.15rem 0.5rem', fontSize: '0.72rem', fontWeight: 600, border: '1px solid #e0e0e0', borderRadius: 4, background: 'white', color: '#555', cursor: 'pointer' },
+  modeBtn: { padding: '0.15rem 0.5rem', fontSize: '0.72rem', fontWeight: 600, borderWidth: 1, borderStyle: 'solid', borderColor: '#e0e0e0', borderRadius: 4, background: 'white', color: '#555', cursor: 'pointer' },
   modeBtnActive: { background: '#1a73e8', color: 'white', borderColor: '#1a73e8' },
   hookInfo: { fontSize: '0.65rem', fontFamily: "'SF Mono','Fira Code','Consolas',monospace", color: '#888', background: '#f8f9fa', padding: '0.3rem 0.4rem', borderRadius: 4, border: '1px solid #e8e8e8', marginTop: '0.25rem', lineHeight: '1.4' },
 }
@@ -316,7 +316,7 @@ function SignatureDemo() {
           </div>
         </div>
         <div style={css.canvasWrapper}>
-          {apiMode === 'component' ? (
+          <div style={{ display: apiMode === 'component' ? 'block' : 'none' }}>
             <SignatureCanvas
               ref={sigRef}
               penColor={penColor}
@@ -336,9 +336,10 @@ function SignatureDemo() {
               onRedo={() => updateCanStates()}
               onSave={(url) => setSaveCallbackUrl(url.slice(0, 60) + '...')}
             />
-          ) : (
+          </div>
+          <div style={{ display: apiMode === 'hook' ? 'block' : 'none' }}>
             <canvas ref={hookCanvasRef} style={{ width: '100%', height: '100%' }} />
-          )}
+          </div>
           {isDisabled && <div style={css.disabledOverlay}><span>Read-only mode</span></div>}
         </div>
         {previewUrl && (
