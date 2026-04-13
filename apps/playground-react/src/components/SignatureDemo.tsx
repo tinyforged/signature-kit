@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { SignatureCanvas } from '@tinyforged/signature-kit-react'
 import { useSignatureKit } from '@tinyforged/signature-kit-react'
 import type { WatermarkOptions } from '@tinyforged/signature-kit-react'
