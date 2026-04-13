@@ -623,4 +623,4 @@ function SignatureDemo() {
   )
 }
 
-export default function SignatureDemo
+export default SignatureDemo
