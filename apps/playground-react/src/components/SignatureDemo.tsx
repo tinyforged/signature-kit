@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { SignatureCanvas } from '@tinyforged/signature-kit-react'
 import { useSignatureKit } from '@tinyforged/signature-kit-react'
-import type { WatermarkOptions } from '@tinyforged/signature-kit-react'
+import type { WatermarkOptions, SignatureCanvasRef } from '@tinyforged/signature-kit-react'
 
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(1, 3), 16)
@@ -133,6 +133,7 @@ function SignatureDemo() {
     const blob = apiMode === 'hook'
       ? hookToBlob()
       : sigRef.current?.toBlob('image/png')
+    if (!blob) return
     blob.then((b) => {
       const url = URL.createObjectURL(b)
       setPreviewUrl(url)
@@ -209,7 +210,8 @@ function SignatureDemo() {
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    (apiMode === 'hook' ? hookFromFile(file) : sigRef.current?.fromFile(file)).then(() => updateCanStates())
+    const promise = apiMode === 'hook' ? hookFromFile(file) : sigRef.current?.fromFile(file)
+    promise?.then(() => updateCanStates())
     e.target.value = ''
   }
 
@@ -231,19 +233,15 @@ function SignatureDemo() {
     canvasRef: hookCanvasRef,
     canUndo: hookCanUndo,
     canRedo: hookCanRedo,
-    isEmpty: hookIsEmpty,
     clear: hookClear,
     reset: hookReset,
     undo: hookUndo,
     redo: hookRedo,
     toDataURL: hookToDataURL,
     toBlob: hookToBlob,
-    toFile: hookToFile,
     toSVG: hookToSVG,
-    fromDataURL: hookFromDataURL,
     fromFile: hookFromFile,
     toData: hookToData,
-    fromData: hookFromData,
     addWatermark: hookAddWatermark,
     clearWatermark: hookClearWatermark,
     trim: hookTrim,
@@ -264,7 +262,6 @@ function SignatureDemo() {
     onEnd: () => updateCanStates(),
     onUndo: () => updateCanStates(),
     onRedo: () => updateCanStates(),
-    onSave: (url) => setSaveCallbackUrl(url.slice(0, 60) + '...'),
   })
 
   const hookGetCanvas = useCallback(() => {
@@ -278,7 +275,6 @@ function SignatureDemo() {
     setCanRedoState(hookCanRedo)
   }, [apiMode, hookCanUndo, hookCanRedo])
 
-  const activeCanvasRef = apiMode === 'hook' ? hookCanvasRef : sigRef
   const activeCanUndo = apiMode === 'hook' ? hookCanUndo : canUndoState
   const activeCanRedo = apiMode === 'hook' ? hookCanRedo : canRedoState
 
