@@ -370,7 +370,7 @@ function SignatureDemo() {
               <div style={css.hookInfo}>
                 <code>useSignatureKit(options)</code>{'\n'}
                 {'Returns: canvasRef, canUndo, canRedo, isEmpty, clear, reset,\n'}
-                undo, redo, toDataURL, toBlob, toFile, toSVG, fromDataURL,\n'}
+                {'undo, redo, toDataURL, toBlob, toFile, toSVG, fromDataURL,\n'}
                 fromFile, toData, fromData, addWatermark, clearWatermark, trim, getKit
               </div>
             </div>
