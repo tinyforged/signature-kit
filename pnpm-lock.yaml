@@ -122,7 +122,7 @@ importers:
   packages/core:
     dependencies:
       signature_pad:
-        specifier: ^4.0.0 || ^5.0.0
+        specifier: ^5.1.3
         version: 5.1.3
     devDependencies:
       tsup:
@@ -135,11 +135,8 @@ importers:
   packages/react:
     dependencies:
       '@tinyforged/signature-kit':
-        specifier: ^1.1.0
+        specifier: workspace:*
         version: link:../core
-      signature_pad:
-        specifier: ^4.0.0 || ^5.0.0
-        version: 5.1.3
     devDependencies:
       '@types/react':
         specifier: ^19.2.14
@@ -163,11 +160,8 @@ importers:
   packages/vue:
     dependencies:
       '@tinyforged/signature-kit':
-        specifier: ^1.1.0
+        specifier: workspace:*
         version: link:../core
-      signature_pad:
-        specifier: ^4.0.0 || ^5.0.0
-        version: 5.1.3
     devDependencies:
       '@vitejs/plugin-vue':
         specifier: ^6.0.5
