@@ -10,5 +10,5 @@ export type {
   SignatureKitEventDetail,
   TrimOptions,
   TrimResult,
+  PointGroup,
 } from '@tinyforged/signature-kit'
-export type { PointGroup } from 'signature_pad'
