@@ -1,6 +1,6 @@
 {
   "name": "@tinyforged/signature-kit-react",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "React electronic signature component",
   "license": "MIT",
   "author": "TinyForged",
@@ -25,7 +25,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@tinyforged/signature-kit": "workspace:*"
+    "@tinyforged/signature-kit": "^1.1.1"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
