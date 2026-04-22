@@ -4,6 +4,8 @@
 
 一套与框架无关的电子签名库，支持 Vue 3 和 React。基于 [signature_pad](https://github.com/szimek/signature_pad) 构建。
 
+![GitHub stars](https://img.shields.io/github/stars/TinyForged/signature-kit?style=flat-square) ![License](https://img.shields.io/npm/l/@tinyforged/signature-kit?style=flat-square)
+
 ## 特性
 
 - 支持压感笔触宽度的流畅签名绘制
@@ -18,11 +20,11 @@
 
 ## 包
 
-| 包 | 描述 |
-|---|---|
-| [`@tinyforged/signature-kit`](#core) | 核心库，与框架无关 |
-| [`@tinyforged/signature-kit-vue`](#vue-3) | Vue 3 组件 |
-| [`@tinyforged/signature-kit-react`](#react) | React 组件 |
+| 包 | 版本 | 下载量 | 描述 |
+|---|---|---|---|
+| [`@tinyforged/signature-kit`](#core) | ![npm](https://img.shields.io/npm/v/@tinyforged/signature-kit?style=flat-square) | ![npm](https://img.shields.io/npm/dt/@tinyforged/signature-kit?style=flat-square) | 核心库，与框架无关 |
+| [`@tinyforged/signature-kit-vue`](#vue-3) | ![npm](https://img.shields.io/npm/v/@tinyforged/signature-kit-vue?style=flat-square) | ![npm](https://img.shields.io/npm/dt/@tinyforged/signature-kit-vue?style=flat-square) | Vue 3 组件 |
+| [`@tinyforged/signature-kit-react`](#react) | ![npm](https://img.shields.io/npm/v/@tinyforged/signature-kit-react?style=flat-square) | ![npm](https://img.shields.io/npm/dt/@tinyforged/signature-kit-react?style=flat-square) | React 组件 |
 
 ## 安装
 

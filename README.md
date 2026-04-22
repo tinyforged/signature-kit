@@ -4,6 +4,8 @@ English | [中文](README_zh-CN.md)
 
 A set of framework-agnostic electronic signature libraries for Vue 3 and React. Powered by [signature_pad](https://github.com/szimek/signature_pad).
 
+![GitHub stars](https://img.shields.io/github/stars/TinyForged/signature-kit?style=flat-square) ![License](https://img.shields.io/npm/l/@tinyforged/signature-kit?style=flat-square)
+
 ## Features
 
 - Smooth signature drawing with pressure-sensitive stroke width
@@ -18,11 +20,11 @@ A set of framework-agnostic electronic signature libraries for Vue 3 and React. 
 
 ## Packages
 
-| Package | Description |
-|---|---|
-| [`@tinyforged/signature-kit`](#core) | Core library, framework-agnostic |
-| [`@tinyforged/signature-kit-vue`](#vue-3) | Vue 3 component |
-| [`@tinyforged/signature-kit-react`](#react) | React component |
+| Package | Version | Downloads | Description |
+|---|---|---|---|
+| [`@tinyforged/signature-kit`](#core) | ![npm](https://img.shields.io/npm/v/@tinyforged/signature-kit?style=flat-square) | ![npm](https://img.shields.io/npm/dt/@tinyforged/signature-kit?style=flat-square) | Core library, framework-agnostic |
+| [`@tinyforged/signature-kit-vue`](#vue-3) | ![npm](https://img.shields.io/npm/v/@tinyforged/signature-kit-vue?style=flat-square) | ![npm](https://img.shields.io/npm/dt/@tinyforged/signature-kit-vue?style=flat-square) | Vue 3 component |
+| [`@tinyforged/signature-kit-react`](#react) | ![npm](https://img.shields.io/npm/v/@tinyforged/signature-kit-react?style=flat-square) | ![npm](https://img.shields.io/npm/dt/@tinyforged/signature-kit-react?style=flat-square) | React component |
 
 ## Installation
 
